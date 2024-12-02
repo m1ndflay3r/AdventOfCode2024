@@ -100,9 +100,6 @@ while true; do
   done
 done
 
-print "$dayone_arr_one_cln[@]" > $(pwd)/dayone_arr_one_cln
-print "$dayone_arr_two_cln[@]" > $(pwd)/dayone_arr_two_cln
-
 ## Compare entries on each list and add up sum of differences
 dayone_arr_count=0
 finalsums=0

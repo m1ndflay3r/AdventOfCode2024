@@ -117,5 +117,17 @@ unset IFS
 #    finalsums=$((finalsums+inputnum))
 #done
 
+## check each number in list one against each number in list 2, multiplying by original num and adding up total
+finalsums=0
+for check_num in $=do_list_array_one; do
+  simscore=0
+  for check_against in $=do_list_array_two; do
+    [ "$check_num" -eq "$check_against" ] && \
+      simscore=$((simscore+1))
+  done
+  placeholder=$((check_num*simscore))
+  finalsums=$((finalsums+placeholder))
+done
+
 ## print results
 print "$finalsums"
