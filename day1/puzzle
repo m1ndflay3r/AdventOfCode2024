@@ -1,0 +1,6 @@
+key points:
+
+1 - left and right numbers (separated by spaces) to be treated as separate lists
+2 - lists must be sorted from smallest to largest number
+3 - each item on left list must be compared to corresponding entry on right list to find the difference between them.
+4 - all differences, once found, must be added up to produce the solution

@@ -1,0 +1,44 @@
+#!/usr/bin/env zsh
+
+##env setup
+fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
+autoload libmiscinit
+libmiscinit
+
+## fetch input data
+#error out if not executed in same directory as solution since I CBF to make this position-independent
+! isfile $(pwd)/input && \
+  print "Error: could not find input file. Are you in the right directory?" && \
+  exit 1
+# actually fetch input data. Using fox-fr for no reason other than that I wrote it
+dayone_input_raw=$(fox-fr $(pwd)/input)
+
+## convert raw input into two separate arrays
+#declare arrays
+unset do_list_array_one
+unset do_list_array_two
+declare -a do_list_array_one
+declare -a do_list_array_two
+
+#parse raw input line by line, separate numbers into respective arrays
+IFS=$'\n'
+for dayone_lines in $=dayone_input_raw; do
+  dayone_arrswitch=0
+  IFS=$'   '
+  for dayone_sep in $=dayone_lines; do
+    if [ "$dayone_arrswitch" = 0 ]; then
+      do_list_array_one+=("$dayone_sep")
+      dayone_arrswitch=1
+    else
+      do_list_array_two+=("$dayone_sep") && \
+      dayone_arrswitch=0
+    fi
+  done
+done
+unset IFS
+
+## sort each array from smallest to largest
+
+
+print $do_list_array_one[1]
+print $do_list_array_two[1]
