@@ -39,6 +39,63 @@ unset IFS
 
 ## sort each array from smallest to largest
 
+#declare arrays which will hold sorted numbers
+unset dayone_arr_one_cln
+declare -a dayone_arr_one_cln
+unset dayone_arr_two_cln
+declare -a dayone_arr_two_cln
 
-print $do_list_array_one[1]
-print $do_list_array_two[1]
+# perform sort (yes I know I should use a function here)
+while true; do
+  [ -z "$do_list_array_one[1]" ] && \
+  break
+  dayone_workingnum=$do_list_array_one[1]
+  do_list_array_one[1]=
+  isnot_smallest=0
+  for check_num in $=do_list_array_one; do
+    [ $dayone_workingnum -gt $check_num ] && \
+      isnot_smallest=1
+  done
+  [ "$isnot_smallest" = 0 ] && \
+    dayone_arr_one_cln+=("$dayone_workingnum")
+  [ "$isnot_smallest" = 1 ] && \
+    do_list_array_one+=("$dayone_workingnum")
+  unset placeholder
+  declare -a placeholder
+  for entry in $=do_list_array_one; do
+    ! [ -z "$entry" ] && \
+    placeholder+=("$entry")
+  done
+  unset do_list_array_one
+  declare -a do_list_array_one
+  for addback in $=placeholder; do
+    do_list_array_one+=("$addback")
+  done
+done
+
+while true; do
+  [ -z "$do_list_array_two[1]" ] && \
+  break
+  dayone_workingnum=$do_list_array_two[1]
+  do_list_array_two[1]=
+  isnot_smallest=0
+  for check_num in $=do_list_array_two; do
+    [ $dayone_workingnum -gt $check_num ] && \
+      isnot_smallest=1
+  done
+  [ "$isnot_smallest" = 0 ] && \
+    dayone_arr_two_cln+=("$dayone_workingnum")
+  [ "$isnot_smallest" = 1 ] && \
+    do_list_array_two+=("$dayone_workingnum")
+  unset placeholder
+  declare -a placeholder
+  for entry in $=do_list_array_two; do
+    ! [ -z "$entry" ] && \
+    placeholder+=("$entry")
+  done
+  unset do_list_array_two
+  declare -a do_list_array_two
+  for addback in $=placeholder; do
+    do_list_array_two+=("$addback")
+  done
+done
