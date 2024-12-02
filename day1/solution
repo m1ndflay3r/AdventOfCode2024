@@ -37,8 +37,6 @@ for dayone_lines in $=dayone_input_raw; do
 done
 unset IFS
 
-print "DEBUG: "$do_list_array_one[@]""
-print "DEBUG: "$do_list_array_two[@]""
 ## sort each array from smallest to largest
 
 #declare arrays which will hold sorted numbers
