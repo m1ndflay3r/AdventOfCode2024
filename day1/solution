@@ -37,6 +37,8 @@ for dayone_lines in $=dayone_input_raw; do
 done
 unset IFS
 
+print "DEBUG: "$do_list_array_one[@]""
+print "DEBUG: "$do_list_array_two[@]""
 ## sort each array from smallest to largest
 
 #declare arrays which will hold sorted numbers
@@ -99,3 +101,23 @@ while true; do
     do_list_array_two+=("$addback")
   done
 done
+
+print "DEBUG: "$dayone_arr_one_cln[@]""
+print "DEBUG: "$dayone_arr_two_cln[@]""
+
+## Compare entries on each list and add up sum of differences
+dayone_arr_count=0
+finalsums=0
+for compareone in $=dayone_arr_one_cln; do
+  dayone_arr_count=$((dayone_arr_count+1))
+  comparetwo=$dayone_arr_two_cln[$dayone_arr_count]
+  [ "$compareone" -gt "$comparetwo" ] && \
+    inputnum=$((compareone-comparetwo)) && \
+    finalsums=$((finalsums+inputnum))
+  [ "$comparetwo" -gt "$compareone" ] && \
+    inputnum=$((comparetwo-compareone)) && \
+    finalsums=$((finalsums+inputnum))
+done
+
+## print results
+print "$finalsums"
