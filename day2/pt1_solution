@@ -26,8 +26,29 @@ unset IFS
 
 #iterate over each array indice, treating each indice as its own array via divide by space
 for working_arr in $=daytwo_readin_arr; do
+  first_iteration=1
+  second_iteration=1
+  begin_check=0
+  isincrease=0
+  isdecrease=0
   IFS=$' '
   for working_indice in $=working_arr; do
+    # if first loop, set 1st num to target indice, do nothing else
+    [ "$first_iteration" = 1 ] && \
+      working_first=$working_indice && \
+      first_iteration=0
+    # if this is >=3rd loop, set first num to previous loops second num, and set second num to target indice
+    [ "$first_iteration" = 0 ] && \
+    [ "$second_iteration" = 0 ] && \
+      working_first=$working_second && \
+      working_second=$working_indice
+    # if second loop, set 2nd num to targrt indice and enable comparison logic for this and subsequent loops
+    [ "$second_iteration" = 1 ] && \
+    [ "$first_iteration" = 0 ] && \
+      working_second=$working_indice && \
+      begin_check=1 && \
+      second_iteration=0
+
   done
   unset IFS
 done
