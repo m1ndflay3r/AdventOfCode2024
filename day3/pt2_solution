@@ -19,23 +19,35 @@ valid=$(grep -oE "mul\([0-9]+,[0-9]+\)|do\(\)|don't\(\)" <<< "$input")
 ## perform mult, add results
 result=0
 #iterate over each mul instruction, convert to zsh format
+mult_switch=1
+is_mult=0
 IFS=$'\n'
 for mult in $=valid; do
-  print $mult
-#  mult=${mult:4}
-#  mult=${mult: :-1}
-#  IFS=$','
-#  unset figone
-#  unset figtwo
-#  for do_mult in $=mult; do
-#    [ ! -z "$figone" ] && \
-#      figtwo=$do_mult && \
-#      placeholder=$((figone*figtwo)) && \
-#      result=$((result+placeholder))
-#    [ -z "$figone" ] && \
-#      figone=$do_mult
-#  done
-#  IFS=$'\n'
+  test_inst=${mult: :3}
+  [ "$test_inst" = "mul" ] && \
+    is_mult=1 || \
+    is_mult=0
+  if [ "$is_mult" = 1 ] && \
+     [ "$mult_switch" = 1 ]; then
+    mult=${mult:4}
+    mult=${mult: :-1}
+    IFS=$','
+    unset figone
+    unset figtwo
+    for do_mult in $=mult; do
+      [ ! -z "$figone" ] && \
+        figtwo=$do_mult && \
+        placeholder=$((figone*figtwo)) && \
+        result=$((result+placeholder))
+      [ -z "$figone" ] && \
+        figone=$do_mult
+    done
+    IFS=$'\n'
+  fi
+  [ "$test_inst" = 'do(' ] && \
+    mult_switch=1
+  [ "$test_inst" = 'don' ] && \
+    mult_switch=0
 done
 unset IFS
 print $result
