@@ -1,5 +1,33 @@
 #!/usr/bin/env zsh
 
+##env setup
+#initialize libmisc
 fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
 autoload libmiscinit
 libmiscinit
+
+#error out if no input provided
+! isfile ./input && \
+  print "Cannot find puzzle input. Are you in the right directory?" && \
+  exit 1
+
+## fetch puzzle input
+#read raw input
+daytwo_input=$(fox-fr input)
+
+#divide input by newline, saving each as an array indice
+unset daytwo_readin_arr
+declare -a daytwo_readin_arr
+IFS=$'\n'
+for array_indice in $=daytwo_input; do
+  daytwo_readin_arr+=("$array_indice")
+done
+unset IFS
+
+#iterate over each array indice, treating each indice as its own array via divide by space
+for working_arr in $=daytwo_readin_arr; do
+  IFS=$' '
+  for working_indice in $=working_arr; do
+  done
+  unset IFS
+done
