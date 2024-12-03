@@ -1,5 +1,41 @@
 #!/usr/bin/env zsh
 
+
+## env setup
 fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
 autoload libmiscinit
 libmiscinit
+
+! isfile ./input && \
+  print "Cannot find puzzle input! Are you in the right directory?" && \
+  exit 1
+
+## fetch input data
+input=$(fox-fr ./input)
+
+## clean puzzle input
+valid=$(grep -oE "mul\([0-9]+,[0-9]+\)|do\(\)|don't\(\)" <<< "$input")
+
+## perform mult, add results
+result=0
+#iterate over each mul instruction, convert to zsh format
+IFS=$'\n'
+for mult in $=valid; do
+  print $mult
+#  mult=${mult:4}
+#  mult=${mult: :-1}
+#  IFS=$','
+#  unset figone
+#  unset figtwo
+#  for do_mult in $=mult; do
+#    [ ! -z "$figone" ] && \
+#      figtwo=$do_mult && \
+#      placeholder=$((figone*figtwo)) && \
+#      result=$((result+placeholder))
+#    [ -z "$figone" ] && \
+#      figone=$do_mult
+#  done
+#  IFS=$'\n'
+done
+unset IFS
+print $result
