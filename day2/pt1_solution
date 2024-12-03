@@ -11,6 +11,8 @@ libmiscinit
   print "Cannot find puzzle input. Are you in the right directory?" && \
   exit 1
 
+total=0
+
 ## fetch puzzle input
 #read raw input
 daytwo_input=$(fox-fr input)
@@ -26,30 +28,97 @@ unset IFS
 
 ##main body
 #iterate over each array indice, treating each indice as its own array via divide by space
+IFS=$'\n'
 for working_arr in $=daytwo_readin_arr; do
+
+#  print $working_arr
+#  sleep 5
+
   first_iteration=1
   second_iteration=1
   begin_check=0
-  isincrease=0
-  isdecrease=0
+  is_increase=0
+  is_decrease=0
+  fail=0
+  unset working_first
+  unset working_second
   IFS=$' '
   for working_indice in $=working_arr; do
-    # if first loop, set 1st num to target indice, do nothing else
-    [ "$first_iteration" = 1 ] && \
-      working_first=$working_indice && \
-      first_iteration=0
+#   print $working_indice
+#sleep 5
+#  print "DEBUG: working indice "$working_indice""
     # if this is >=3rd loop, set first num to previous loops second num, and set second num to target indice
-    [ "$first_iteration" = 0 ] && \
-    [ "$second_iteration" = 0 ] && \
-      working_first=$working_second && \
+    if [ "$first_iteration" = 0 ] && \
+    [ "$second_iteration" = 0 ]; then
+     print "3rd or greater loop: set 1st to 2nd, set 2nd to new num"
+      working_first=$working_second
       working_second=$working_indice
-    # if second loop, set 2nd num to targrt indice and enable comparison logic for this and subsequent loops
-    [ "$second_iteration" = 1 ] && \
-    [ "$first_iteration" = 0 ] && \
-      working_second=$working_indice && \
-      begin_check=1 && \
-      second_iteration=0
-
+    fi
+    # if second loop, set 2nd num to target indice and enable comparison logic for this and subsequent loops
+    if [ "$second_iteration" = 1 ] && \
+    [ "$first_iteration" = 0 ]; then
+      print "2nd iteration: set 2nd to "$working_indice", enable compare"
+      working_second=$working_indice
+      begin_check=1
+    fi
+    # if first loop, set 1st num to target indice, do nothing else
+    if [ "$first_iteration" = 1 ]; then
+      working_first=$working_indice
+      first_iteration=0
+      second_iteration=1
+#      print "first iteration: set 1st to "$working_indice""
+    fi
+    #comparison logic begins
+    # if is still second iteration when comparison runs, determine if is increase or decrease
+    if [ "$begin_check" = 1 ]; then
+      if [ "$is_increase" = 0 ] && [ "$is_decrease" = 0 ]; then
+        if [ "$working_first" -lt "$working_second" ]; then
+          is_increase=1
+          print "report "$working_first" "$working_second" as increasing"
+        fi
+        if [ "$working_first" -gt "$working_second" ]; then
+          is_decrease=1
+          print "report "$working_first" "$working_second" as decreasing"
+        fi
+        second_iteration=0
+      fi
+      # if compare finds equal, then fail
+      [ "$working_first" = "$working_second" ] && \
+        print "fail" && \
+        fail=1
+      # if increasing...
+      if [ "$is_increasing" = 1 ]; then
+        # fail if 2nd number smaller than 1st
+        [[ "$working_second" -lt "$working_first" ]] && \
+          print "fail" && \
+          fail=1
+        # fail if result of subtracting first num from 2nd is > 3
+        check_comp=$((working_second-working_first))
+        [[ "$check_comp" -gt 3 ]] && \
+          print "fail" && \
+          fail=1
+      fi
+      # if decreasing...
+      if [ "$is_decreasing" = 1 ]; then
+        # fail if 2nd number larger than 1st
+        [ "$working_second" -gt "$working_first" ] && \
+          print "fail" && \
+          fail=1
+        # fail if result of subtracting 2nd num from 1st is >3
+        check_comp=$((working_first-working_second))
+        [ "$check_comp" -gt 3 ] && \
+          print "fail" && \
+          fail=1
+      fi
+    fi
+#    [ "$fail" = 1 ] && \
+#      print "comparison reported failure"
+#      break
   done
   unset IFS
+  [ "$fail" = 0 ] && \
+#    print "comparison success, increase total"
+    total=$((total+1))
 done
+print $total
+unset IFS
