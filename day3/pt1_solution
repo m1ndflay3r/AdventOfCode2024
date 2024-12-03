@@ -23,6 +23,18 @@ IFS=$'\n'
 for mult in $=valid; do
   mult=${mult:4}
   mult=${mult: :-1}
-  
+  IFS=$','
+  unset figone
+  unset figtwo
+  for do_mult in $=mult; do
+    [ ! -z "$figone" ] && \
+      figtwo=$do_mult && \
+      placeholder=$((figone*figtwo)) && \
+      result=$((result+placeholder))
+    [ -z "$figone" ] && \
+      figone=$do_mult
+  done
+  IFS=$'\n'
 done
 unset IFS
+print $result
