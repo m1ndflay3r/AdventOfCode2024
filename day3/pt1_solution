@@ -1,5 +1,22 @@
 #!/usr/bin/env zsh
 
+
+## env setup
 fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
 autoload libmiscinit
 libmiscinit
+
+! isfile ./input && \
+  print "Cannot find puzzle input! Are you in the right directory?" && \
+  exit 1
+
+## fetch input data
+daythree_input=$(fox-fr ./input)
+
+## begin clean puzzle input
+unset daythree_pointer
+while IFS= noglob read -r -k1 -d '' -u0 daythree_readin; do
+  IFS= noglob print -rn $daythree_readin
+  sleep 0.1
+done < <(noglob printf '%s' "$daythree_input")
+
