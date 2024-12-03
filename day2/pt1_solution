@@ -24,6 +24,7 @@ for array_indice in $=daytwo_input; do
 done
 unset IFS
 
+##main body
 #iterate over each array indice, treating each indice as its own array via divide by space
 for working_arr in $=daytwo_readin_arr; do
   first_iteration=1
