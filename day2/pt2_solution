@@ -1,5 +1,128 @@
 #!/usr/bin/env zsh
 
+##env setup
+#initialize libmisc
 fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
 autoload libmiscinit
 libmiscinit
+
+#error out if no input provided
+! isfile ./input && \
+  print "Cannot find puzzle input. Are you in the right directory?" && \
+  exit 1
+
+total=0
+
+## fetch puzzle input
+#read raw input
+daytwo_input=$(fox-fr input)
+
+#divide input by newline, saving each as an array indice
+unset daytwo_readin_arr
+declare -a daytwo_readin_arr
+IFS=$'\n'
+for array_indice in $=daytwo_input; do
+  daytwo_readin_arr+=("$array_indice")
+done
+unset IFS
+
+##main body
+#iterate over each array indice, treating each indice as its own array via divide by space
+IFS=$'\n'
+for working_arr in $=daytwo_readin_arr; do
+  first_iteration=1
+  second_iteration=1
+  begin_check=0
+  is_increase=0
+  is_decrease=0
+  fail=0
+  bigfail=0
+  unset working_first
+  unset working_second
+  IFS=$' '
+  for working_indice in $=working_arr; do
+    # if this is >=3rd loop, set first num to previous loops second num, and set second num to target indice
+    if [ "$first_iteration" = 0 ] && \
+    [ "$second_iteration" = 0 ]; then
+      working_first=$working_second
+      working_second=$working_indice
+    fi
+    # if second loop, set 2nd num to target indice and enable comparison logic for this and subsequent loops
+    if [ "$second_iteration" = 1 ] && \
+    [ "$first_iteration" = 0 ]; then
+      working_second=$working_indice
+      begin_check=1
+    fi
+    # if first loop, set 1st num to target indice, do nothing else
+    if [ "$first_iteration" = 1 ]; then
+      working_first=$working_indice
+      first_iteration=0
+      second_iteration=1
+    fi
+    #comparison logic begins
+    # if is still second iteration when comparison runs, determine if is increase or decrease
+    if [ "$begin_check" = 1 ]; then
+      if [ "$is_increase" = 0 ] && [ "$is_decrease" = 0 ]; then
+        if [ "$working_first" -lt "$working_second" ]; then
+          is_increase=1
+        fi
+        if [ "$working_first" -gt "$working_second" ]; then
+          is_decrease=1
+        fi
+        second_iteration=0
+      fi
+      # if compare finds equal, then fail
+      if [ "$working_first" = "$working_second" ]; then
+        [ "$fail" = 1 ] && \
+          bigfail=1
+        [ "$fail" = 0 ] && \
+          fail=1
+      fi
+      # if increasing...
+      if [ "$is_increase" = 1 ]; then
+        # fail if 2nd number smaller than 1st
+        if [ "$working_second" -lt "$working_first" ]; then
+          [ "$fail" = 1 ] && \
+            bigfail=1
+          [ "$fail" = 0 ] && \
+            fail=1
+        fi
+        # fail if result of subtracting first num from 2nd is > 3
+        check_comp=$((working_second-working_first))
+        if [ "$check_comp" -gt 3 ]; then
+           [ "$fail" = 1 ] && \
+             bigfail=1
+           [ "$fail" = 0 ] && \
+             fail=1
+        fi
+      fi
+      # if decreasing...
+      if [ "$is_decrease" = 1 ]; then
+        # fail if 2nd number larger than 1st
+        if [ "$working_second" -gt "$working_first" ]; then
+          [ "$fail" = 1 ] && \
+            bigfail=1
+          [ "$fail" = 0 ] && \
+            fail=1
+        fi
+        # fail if result of subtracting 2nd num from 1st is >3
+        check_comp=$((working_first-working_second))
+        if [ "$check_comp" -gt 3 ]; then
+           [ "$fail" = 1 ] && \
+             bigfail=1
+           [ "$fail" = 0 ] && \
+             fail=1
+        fi
+      fi
+    fi
+  done
+  unset IFS
+  [ "$bigfail" = 0 ] && \
+    total=$((total+1))
+done
+unset IFS
+total=$((total-3))
+
+## print results
+print $total
+
