@@ -8,7 +8,6 @@
 int read_grid_from_file(char *filename, char ***grid, int *rows, int *cols) {
   FILE *file = fopen(filename, "r");
   if (!file) {
-    printf("Failed to find puzzle input! Are you in the right directory?\n");
     return 0;
   }
   *rows = 0;
