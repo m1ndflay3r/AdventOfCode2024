@@ -1,0 +1,5 @@
+#!/usr/bin/env zsh
+
+fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
+autoload libmiscinit
+libmiscinit
