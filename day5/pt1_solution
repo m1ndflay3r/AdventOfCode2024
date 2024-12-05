@@ -1,0 +1,32 @@
+#!/usr/bin/env zsh
+
+## env setup
+fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
+autoload libmiscinit
+libmiscinit
+
+! isfile ./input && \
+  print "Cannot find puzzle input! Are you in the right directory?" && \
+  return 1
+
+## fetch input
+#fetch raw input
+dayfive_input_raw=$(fox-fr ./input)
+
+#create arrays to store rules + updates
+unset dayfive_rules_array
+unset dayfive_updates_array
+declare -a dayfive_rules_array
+declare -a dayfive_updates_array
+
+#iterate through each input line, using '|' to denote rules and ',' to denote updates
+IFS=$'\n'
+for parse_line in $=dayfive_input_raw; do
+  print -rn $parse_line | blep '|' && \
+  print "is rule, saving to rule array" && \
+  dayfive_rules_array+=("$parse_line")
+  print -rn $parse_line | blep ',' && \
+  print "is update, saving to update array" && \
+  dayfive_updates_array+=("$parse_line")
+done
+unset IFS
