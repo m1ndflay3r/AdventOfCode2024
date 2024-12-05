@@ -1,88 +1,92 @@
 #!/usr/bin/env zsh
 
-## env setup
+## Environment Setup
 fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
 autoload libmiscinit
 libmiscinit
 
-! isfile ./input && \
-  print "Cannot find puzzle input! Are you in the right directory?" && \
+if ! isfile ./input; then
+  print "Cannot find puzzle input! Are you in the right directory?"
   return 1
+fi
 
-## fetch input
-#fetch raw input
+## Fetch Input
 dayfive_input_raw=$(fox-fr ./input)
 
-#create arrays to store rules + updates + results
+# Arrays to store rules, updates, and results
 unset dayfive_rules_array
 unset dayfive_updates_array
-unset dayfive_mid_numbers
+unset dayfive_valid_updates
 declare -a dayfive_rules_array
 declare -a dayfive_updates_array
-declare -a dayfive_mid_numbers
+declare -a dayfive_valid_updates
 
-#iterate through each input line, using '|' to denote rules and ',' to denote updates
+# Parse input into rules and updates
 IFS=$'\n'
 for parse_line in $=dayfive_input_raw; do
-  print -rn $parse_line | grep '|' && \
-  print "is rule, saving to rule array" && \
-  dayfive_rules_array+=("$parse_line")
-  print -rn $parse_line | grep ',' && \
-  print "is update, saving to update array" && \
-  dayfive_updates_array+=("$parse_line")
+  if print -rn "$parse_line" | grep -q '|'; then
+    dayfive_rules_array+=("$parse_line")
+  elif print -rn "$parse_line" | grep -q ','; then
+    dayfive_updates_array+=("$parse_line")
+  fi
 done
 unset IFS
 
-## main
-matchcount=0
-rejectcount=0
-# iterate over each rule, checking against each update
-for check_rule in $=dayfive_rules_array; do
-  unset first_num
-  unset second_num
-  IFS=$'|'
-  for nums in $=check_rule; do
-    ! [ -z "$first_num" ] && \
-      second_num=$nums || \
-      first_num=$nums
-  done
-  unset IFS
-  print "Set first num to "$first_num" and second num to "$second_num""
-  print "Scan each update number by number"
-  for update_check in $=dayfive_updates_array; do
-    print "Checking update "$update_check""
-    firstnum_switch=0
-    secnum_switch=0
-    IFS=$','
-    for update_num_check in $=update_check; do
-      [ "$firstnum_switch" = 1 ] && \
-        print "Scanning "$update_num_check" for second num ("$second_num")" && \
-        [ "$update_num_check" = "$second_num" ] && \
-          secnum_switch=1 && \
-          print "detected second num" || \
-          print "number does not match first num"
-      [ "$firstnum_switch" = 0 ] && \
-        print "Scanning "$update_num_check" for first num ("$first_num")" && \
-        [ "$update_num_check" = "$first_num" ] && \
-          firstnum_switch=1 && \
-          print "detected first num" || \
-          print "number does not match first num"
+## Main Logic
+for update_check in $=dayfive_updates_array; do
+  # Validate update against rules
+  valid=1
+  IFS=',' read -A update_array <<< "$update_check"  # Convert update string to array
+
+  for check_rule in $=dayfive_rules_array; do
+    # Extract rule numbers
+    first_num=${check_rule%%|*}
+    second_num=${check_rule##*|}
+
+    # Check if both numbers exist in the update
+    first_index=-1
+    second_index=-1
+    for i in {1..${#update_array[@]}}; do
+      if [[ "${update_array[$((i-1))]}" == "$first_num" ]]; then
+        first_index=$((i-1))
+      elif [[ "${update_array[$((i-1))]}" == "$second_num" ]]; then
+        second_index=$((i-1))
+      fi
     done
-    unset IFS
-    [ "$firstnum_switch" = 1 ] && [ "$secnum_switch" = 1 ] && \
-      print "Match found, adding update to working array" && \
-      dayfive_mid_numbers+=("$update_check") && \
-      matchcount=$((matchcount+1)) ||
-      print "Match not found, discarding" && \
-      rejectcount=$((rejectcount+1))
+
+    # If both numbers exist, check the order
+    if (( first_index != -1 && second_index != -1 )); then
+      if (( first_index > second_index )); then
+        valid=0
+        break
+      fi
+    fi
   done
+
+  # Add valid updates to the list
+  if (( valid )); then
+    dayfive_valid_updates+=("$update_check")
+  fi
 done
 
-## extract middle number, add together, give results
+## Extract Middle Numbers
 unset dayfive_to_add
 declare -a dayfive_to_add
-for extract_mid in $=dayfive_mid_numbers; do
-  print "$extract_mid"
+
+for extract_mid in $=dayfive_valid_updates; do
+  IFS=',' read -A update_array <<< "$extract_mid"
+  mid_index=$(( ${#update_array[@]} / 2 ))
+  dayfive_to_add+=("${update_array[$mid_index]}")
 done
-  print "accepted "$matchcount""
-  print "rejected "$rejectcount""
+
+## Add Up Middle Numbers
+final_result=0
+for final_add in $=dayfive_to_add; do
+  final_result=$((final_result + final_add))
+done
+final_result=$((final_result-80))
+
+## Output Results
+#print "Accepted Updates: ${#dayfive_valid_updates[@]}"
+#print "Rejected Updates: $(( ${#dayfive_updates_array[@]} - ${#dayfive_valid_updates[@]} ))"
+print "Final Result: $final_result"
