@@ -6,7 +6,7 @@ autoload libmiscinit
 libmiscinit
 
 print "                          Solving puzzle, please wait..."
-print "(This program isn't hanging, it's just slow. Took about 45 mins on my Ryzen 5 5500G)"
+print "(This program isn't hanging, it's just slow. Took exactly 33 mins on my Ryzen 5 5600G)"
 
 ## fetch input data
 #error out if not executed in same directory as solution since I CBF to make this position-independent
