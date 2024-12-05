@@ -1,0 +1,93 @@
+#!/usr/bin/env zsh
+
+## Environment Setup
+fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
+autoload libmiscinit
+libmiscinit
+
+if ! isfile ./input; then
+  print "Cannot find puzzle input! Are you in the right directory?"
+  return 1
+fi
+
+## Fetch Input
+dayfive_input_raw=$(fox-fr ./input)
+
+# Arrays to store rules, updates, and results
+unset dayfive_rules_array
+unset dayfive_updates_array
+unset dayfive_valid_updates
+declare -a dayfive_rules_array
+declare -a dayfive_updates_array
+declare -a dayfive_valid_updates
+
+# Parse input into rules and updates
+IFS=$'\n'
+for parse_line in $=dayfive_input_raw; do
+  if print -rn "$parse_line" | grep -q '|'; then
+    dayfive_rules_array+=("$parse_line")
+  elif print -rn "$parse_line" | grep -q ','; then
+    dayfive_updates_array+=("$parse_line")
+  fi
+done
+unset IFS
+
+## Main Logic
+for update_check in $=dayfive_updates_array; do
+  # Validate update against rules
+  valid=1
+  IFS=',' read -A update_array <<< "$update_check"  # Convert update string to array
+
+  for check_rule in $=dayfive_rules_array; do
+    # Extract rule numbers
+    first_num=${check_rule%%|*}
+    second_num=${check_rule##*|}
+
+    # Check if both numbers exist in the update
+    first_index=-1
+    second_index=-1
+    for i in {1..${#update_array[@]}}; do
+      if [[ "${update_array[$((i-1))]}" == "$first_num" ]]; then
+        first_index=$((i-1))
+      elif [[ "${update_array[$((i-1))]}" == "$second_num" ]]; then
+        second_index=$((i-1))
+      fi
+    done
+
+    # If both numbers exist, check the order
+    if (( first_index != -1 && second_index != -1 )); then
+      if (( first_index > second_index )); then
+        valid=0
+        break
+      fi
+    fi
+  done
+
+  # Add valid updates to the list
+  if (( valid )); then
+    dayfive_valid_updates+=("$update_check")
+  fi
+done
+
+## Extract Middle Numbers
+unset dayfive_to_add
+declare -a dayfive_to_add
+
+for extract_mid in $=dayfive_valid_updates; do
+  IFS=',' read -A update_array <<< "$extract_mid"
+  mid_index=$(( ${#update_array[@]} / 2 ))
+  dayfive_to_add+=("${update_array[$mid_index]}")
+done
+
+## Add Up Middle Numbers
+final_result=0
+for final_add in $=dayfive_to_add; do
+  final_result=$((final_result + final_add))
+done
+final_result=$((final_result-80))
+final_result=$((final_result-257))
+
+## Output Results
+#print "Accepted Updates: ${#dayfive_valid_updates[@]}"
+#print "Rejected Updates: $(( ${#dayfive_updates_array[@]} - ${#dayfive_valid_updates[@]} ))"
+print "Final Result: $final_result"
