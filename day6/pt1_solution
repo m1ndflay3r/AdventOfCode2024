@@ -132,6 +132,10 @@ query_position() {
   print "$query_result"
 }
 
+search_position() {
+  
+}
+
 x_coord=3 y_coord=3 query_position
 x_coord=3 y_coord=3 update_position Y
 x_coord=3 y_coord=3 query_position
