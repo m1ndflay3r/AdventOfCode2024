@@ -1,0 +1,14 @@
+#!/usr/bin/env zsh
+
+## env setup
+
+fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
+autoload libmiscinit
+libmiscinit
+
+! isfile ./input_arrays && \
+  print "Could not find puzzle input arrays! Did you run convert_to_arrays?" && \
+  return 1
+
+## fetch puzzle input
+source ./input_arrays

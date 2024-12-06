@@ -1,0 +1,30 @@
+#!/usr/bin/env zsh
+
+fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
+autoload libmiscinit
+libmiscinit
+
+! isfile ./input && \
+  print "Cannot find puzzle input! Are you in the right directory?" && \
+  exit 1
+
+rm -rf ./input_arrays
+touch ./input_arrays
+
+conv_to_arr_input=$(fox-fr ./input)
+
+array_count=0
+
+IFS=$'\n'
+for cr_array in $=conv_to_arr_input; do
+  array_count=$((array_count+1))
+  indice_count=0
+  print -n "y_array_"$array_count"=(" >> ./input_arrays
+  while IFS= noglob read -r -k1 -d '' -u0 array_indice; do
+    print -n "'" >> ./input_arrays
+    print -n "$array_indice" >> ./input_arrays
+    print "'" >> ./input_arrays
+  done < <(IFS= noglob print -rn "$cr_array")
+  print ')' >> ./input_arrays
+done
+unset IFS
