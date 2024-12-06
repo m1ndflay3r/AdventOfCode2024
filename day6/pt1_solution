@@ -10,5 +10,165 @@ libmiscinit
   print "Could not find puzzle input arrays! Did you run convert_to_arrays?" && \
   return 1
 
+#array_count=130
+#indice_count=130
+
+array_count=10
+indice_count=10
+
 ## fetch puzzle input
 source ./input_arrays
+
+## update position
+update_position() {
+  # char to be swapped in
+  update_char=$1
+  # error if insufficient input
+  [ -z "$x_coord" ] || [ -z "$y_coord" ] || [ -z "$1" ] && \
+    print "update_position" && \
+    print "usage: x_coord= y_coord= update_position <character>" && \
+    return 1
+  # error if out of bounds update attempt
+  [ "$x_coord" -gt "$indice_count" ] || [ "$y_coord" -gt "$array_count" ] && \
+    print "Error: out of bounds position update!" && \
+    return 1
+  # write pos. update script (I know, I know)
+  rm -rf ./working
+  #env setup
+  print '#!/usr/bin/env zsh' > ./working
+  print '' >> ./working
+  #fetch input arrays
+  print 'source ./input_arrays' >> ./working
+  #env setup
+  print 'rm -rf ./array_update' >> ./working
+  print "x_coord="$x_coord"" >> ./working
+  print "y_coord="$y_coord"" >> ./working
+  print "update_char="$update_char"" >> ./working
+  #print start of updated array
+  print 'print -n "y_array_"$y_coord"=(" > ./array_update' >> ./working
+  #iterate over each indice in target array, add indice as is if not target, add swap char instead if target
+  print 'indice_count=0' >> ./working
+
+  print -n 'for indice in $=y_array_' >> ./working
+  print -n "$y_coord" >> ./working
+  print '; do' >> ./working
+
+  print '  indice_count=$((indice_count+1))' >> ./working
+
+  print '  [ "$indice_count" = "$x_coord" ] && \' >> ./working
+
+  print -n 'print -n "' >> ./working
+  print -n "'" >> ./working
+  print '" >> ./array_update && \' >> ./working
+
+  print -n 'print -n "' >> ./working
+  print -n "$update_char" >> ./working
+  print '">> ./array_update && \' >> ./working
+
+  print -n 'print "' >> ./working
+  print -n "'" >> ./working
+  print '" >> ./array_update || \' >> ./working
+
+  print -n '(print -n "' >> ./working
+  print -n "'" >> ./working
+  print '" >> ./array_update && \' >> ./working
+
+  print -n 'print -n "' >> ./working
+  print -n '$indice' >> ./working
+  print '">> ./array_update && \' >> ./working
+
+  print -n 'print "' >> ./working
+  print -n "'" >> ./working
+  print '" >> ./array_update)' >> ./working
+
+  print 'done' >> ./working
+  print "print ')' >> ./array_update" >> ./working
+  chmod 755 ./working
+  ./working
+  source ./array_update
+}
+
+
+for i in $=y_array_1; do
+  print -n $i
+done
+print
+for i in $=y_array_2; do
+  print -n $i
+done
+print
+for i in $=y_array_3; do
+  print -n $i
+done
+print
+for i in $=y_array_4; do
+  print -n $i
+done
+print
+for i in $=y_array_5; do
+  print -n $i
+done
+print
+for i in $=y_array_6; do
+  print -n $i
+done
+print
+for i in $=y_array_7; do
+  print -n $i
+done
+print
+for i in $=y_array_8; do
+  print -n $i
+done
+print
+for i in $=y_array_9; do
+  print -n $i
+done
+print
+for i in $=y_array_10; do
+  print -n $i
+done
+print
+print '...'
+x_coord=9 y_coord=10 update_position Y
+print
+for i in $=y_array_1; do
+  print -n $i
+done
+print
+for i in $=y_array_2; do
+  print -n $i
+done
+print
+for i in $=y_array_3; do
+  print -n $i
+done
+print
+for i in $=y_array_4; do
+  print -n $i
+done
+print
+for i in $=y_array_5; do
+  print -n $i
+done
+print
+for i in $=y_array_6; do
+  print -n $i
+done
+print
+for i in $=y_array_7; do
+  print -n $i
+done
+print
+for i in $=y_array_8; do
+  print -n $i
+done
+print
+for i in $=y_array_9; do
+  print -n $i
+done
+print
+for i in $=y_array_10; do
+  print -n $i
+done
+print
