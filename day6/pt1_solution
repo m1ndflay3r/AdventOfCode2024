@@ -10,11 +10,11 @@ libmiscinit
   print "Could not find puzzle input arrays! Did you run convert_to_arrays?" && \
   return 1
 
-#array_count=130
-#indice_count=130
+array_count=130
+indice_count=130
 
-array_count=10
-indice_count=10
+#array_count=10
+#indice_count=10
 
 ## fetch puzzle input
 source ./input_arrays
