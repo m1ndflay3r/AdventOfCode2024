@@ -133,13 +133,33 @@ query_position() {
 }
 
 search_position() {
-  
+  do_search=$1
+  x_coord=0
+  y_coord=0
+  found=0
+  while true; do
+    y_coord=$((y_coord+1))
+    [ "$y_coord" = "$array_count" ] && \
+      break
+    x_coord=0
+    while true; do
+      x_coord=$((x_coord+1))
+      [ "$x_coord" = "$indice_count" ] && \
+        break
+      test_position=$(query_position)
+      [ "$test_position" = "$do_search" ] && \
+        print ""$x_coord" "$y_coord"" #&& \
+#        found=1
+    done
+#    [ "$found" = 1 ] && \
+#      break
+  done
 }
 
 x_coord=3 y_coord=3 query_position
 x_coord=3 y_coord=3 update_position Y
 x_coord=3 y_coord=3 query_position
-
+search_position '#'
 
 ##cleanup
 rm -rf ./ledger
