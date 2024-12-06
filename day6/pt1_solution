@@ -86,89 +86,59 @@ update_position() {
   chmod 755 ./working
   ./working
   source ./array_update
+  ! isfile ./ledger && \
+    touch ./ledger
+  fox-fr ./array_update >> ./ledger
+  print '' >> ./ledger
 }
 
+query_position() {
+  # error if insufficient input
+  [ -z "$x_coord" ] || [ -z "$y_coord" ] && \
+    print "query_position" && \
+    print "usage: x_coord= y_coord= query_position <character>" && \
+    return 1
+  # error if out of bounds query attempt
+  [ "$x_coord" -gt "$indice_count" ] || [ "$y_coord" -gt "$array_count" ] && \
+    print "Error: out of bounds position query!" && \
+    return 1
+  rm -rf ./query
+  # write position query script (I know, I know)
+  print '#!/usr/bin/env zsh' > ./query
+  print '' >> ./query
+  print 'fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)' >> ./query
+  print 'autoload libmiscinit' >> ./query
+  print 'libmiscinit' >> ./query
+  #env setup
+  print "x_coord="$x_coord"" >> ./query
+  print "y_coord="$y_coord"" >> ./query
+  print "source ./input_arrays" >> ./query
+  print 'isfile ./ledger && \' >> ./query
+  print "source ./ledger" >> ./query
+  print 'indice_count=0' >> ./query
+  #iterate over each indice until reaching x coord
+  print -n 'for indice in $=y_array_' >> ./query
+  print -n "$y_coord" >> ./query
+  print '; do' >> ./query
 
-for i in $=y_array_1; do
-  print -n $i
-done
-print
-for i in $=y_array_2; do
-  print -n $i
-done
-print
-for i in $=y_array_3; do
-  print -n $i
-done
-print
-for i in $=y_array_4; do
-  print -n $i
-done
-print
-for i in $=y_array_5; do
-  print -n $i
-done
-print
-for i in $=y_array_6; do
-  print -n $i
-done
-print
-for i in $=y_array_7; do
-  print -n $i
-done
-print
-for i in $=y_array_8; do
-  print -n $i
-done
-print
-for i in $=y_array_9; do
-  print -n $i
-done
-print
-for i in $=y_array_10; do
-  print -n $i
-done
-print
-print '...'
-x_coord=9 y_coord=10 update_position Y
-print
-for i in $=y_array_1; do
-  print -n $i
-done
-print
-for i in $=y_array_2; do
-  print -n $i
-done
-print
-for i in $=y_array_3; do
-  print -n $i
-done
-print
-for i in $=y_array_4; do
-  print -n $i
-done
-print
-for i in $=y_array_5; do
-  print -n $i
-done
-print
-for i in $=y_array_6; do
-  print -n $i
-done
-print
-for i in $=y_array_7; do
-  print -n $i
-done
-print
-for i in $=y_array_8; do
-  print -n $i
-done
-print
-for i in $=y_array_9; do
-  print -n $i
-done
-print
-for i in $=y_array_10; do
-  print -n $i
-done
-print
+  print 'indice_count=$((indice_count+1))' >> ./query
+  print '[ "$indice_count" = "$x_coord" ] && \' >> ./query
+  print '  print "$indice" && \' >> ./query
+  print '  break' >> ./query
+
+  print 'done' >> ./query
+  chmod 755 ./query
+  query_result=$(./query)
+  print "$query_result"
+}
+
+x_coord=3 y_coord=3 query_position
+x_coord=3 y_coord=3 update_position Y
+x_coord=3 y_coord=3 query_position
+
+
+##cleanup
+rm -rf ./ledger
+rm -rf ./working
+rm -rf ./query
+rm -rf ./array_update
