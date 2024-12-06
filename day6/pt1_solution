@@ -139,12 +139,12 @@ search_position() {
   found=0
   while true; do
     y_coord=$((y_coord+1))
-    [ "$y_coord" = "$array_count" ] && \
+    [ "$y_coord" = "$((array_count+1))" ] && \
       break
     x_coord=0
     while true; do
       x_coord=$((x_coord+1))
-      [ "$x_coord" = "$indice_count" ] && \
+      [ "$x_coord" = "$((indice_count+1))" ] && \
         break
       test_position=$(query_position)
       [ "$test_position" = "$do_search" ] && \
