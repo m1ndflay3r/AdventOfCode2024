@@ -13,12 +13,22 @@ libmiscinit
   print "Could not find puzzle input arrays! Did you run convert_to_arrays?" && \
   return 1
 
-array_count=130
-indice_count=130
-result_counter=0
+rm -rf /tmp/aoc_day6
+mkdir /tmp/aoc_day6
+#rm -rf ./ledger
+#rm -rf ./working
+#rm -rf ./query
+#rm -rf ./array_update
 
-#array_count=10
-#indice_count=10
+#array_count=130
+#indice_count=130
+
+result_counter=0
+unset already_crossed
+declare -a already_crossed
+
+array_count=10
+indice_count=10
 
 ## fetch puzzle input
 source ./input_arrays
@@ -34,7 +44,6 @@ update_position() {
     return 1
   # error if out of bounds update attempt
   ([ "$x_coord" -gt "$indice_count" ] || [ "$y_coord" -gt "$array_count" ]) && \
-    print "Error: out of bounds position update!" && \
     return 1
   # write pos. update script (I know, I know)
   rm -rf ./working
@@ -47,7 +56,9 @@ update_position() {
   print 'rm -rf ./array_update' >> ./working
   print "x_coord="$x_coord"" >> ./working
   print "y_coord="$y_coord"" >> ./working
-  print "update_char="$update_char"" >> ./working
+  print -n "update_char='" >> ./working
+  print -n "$update_char" >> ./working
+  print "'" >> ./working
   #print start of updated array
   print 'print -n "y_array_"$y_coord"=(" > ./array_update' >> ./working
   #iterate over each indice in target array, add indice as is if not target, add swap char instead if target
@@ -104,7 +115,6 @@ query_position() {
     return 1
   # error if out of bounds query attempt
   ([ "$x_coord" -gt "$indice_count" ] || [ "$y_coord" -gt "$array_count" ]) && \
-    print "Error: out of bounds position query!" && \
     return 1
   rm -rf ./query
   # write position query script (I know, I know)
@@ -175,7 +185,6 @@ mov() {
     invalid=1
 
   [ "$invalid" = 1 ] && \
-    print "Error: out-of-bounds move attempt!" && \
     print "$result_counter" && \
     return 1
 
@@ -183,26 +192,36 @@ mov() {
   x_coord=$x_from
   y_coord=$y_from
   tobe_moved=$(query_position)
+#  print "tobemov x "$x_coord" y "$y_coord""
+#  print "contains "$tobe_moved""
 
   # set coord based on char
   [ "$tobe_moved" = '^' ] && \
-    y_coord=$((y_coord+1))
-  [ "$tobe_moved" = 'v' ] && \
     y_coord=$((y_coord-1))
+  [ "$tobe_moved" = 'v' ] && \
+    y_coord=$((y_coord+1))
   [ "$tobe_moved" = '<' ] && \
     x_coord=$((x_coord-1))
   [ "$tobe_moved" = '>' ] && \
     x_coord=$((x_coord+1))
+
+ # print "new coord x"$x_coord" y"$y_coord""
+ # print -n "contains "
+ # query_position
+
   # if out of bounds
   ([ "$x_coord" -gt "$indice_count" ] || \
    [ "$x_coord" -le "0" ] || \
    [ "$y_coord" -gt "$array_count" ] || \
    [ "$y_coord" -le "0" ]) && \
-    print "Attempted move out of bounds! exiting" && \
     print "result: "$result_counter"" && \
-    exit 0
+    return 0
   # query move to position for obstacle
   moveto=$(query_position)
+#  print "moveto contains "$moveto""
+  [ -z "$moveto" ] && \
+    print "result: "$result_counter"" && \
+    return 0
   if [ "$moveto" = '#' ]; then
     x_coord=$x_from
     y_coord=$y_from
@@ -228,10 +247,21 @@ mov() {
     update_position $tobe_moved
     x_to=$x_coord
     y_to=$y_coord
-    x_coord=$x_from
-    y_coord=$y_from
-    update_position $moveto
-    result_counter=$((result_counter+1))
+#    x_coord=$x_from
+#    y_coord=$y_from
+#    update_position $moveto
+    ziscrossed=0
+    check_crossed=""$x_coord""$y_coord""
+    for chkcross in $=already_crossed; do
+#       print "check "$chkcross" against "$check_crossed""
+      [ "$chkcross" = "$check_crossed" ] && \
+        ziscrossed=1
+#        print "already crossed"
+    done
+    [ "$ziscrossed" = 0 ] && \
+      result_counter=$((result_counter+1)) && \
+      already_crossed+=("$check_crossed")
+#      print "not crossed, adding"
     export x_from=$x_to
     export y_from=$y_to
     print "$result_counter"
@@ -240,9 +270,10 @@ mov() {
 }
 
 print "           Fetching starting position..."
-print "(this program isnt hanging, search is just slow)"
+print "(this program isnt hanging, it's just slow)"
 starting_position=$(search_position '^')
-print "begin solve"
+print ''
+print "Solving puzzle..."
 unset x_from
 unset y_from
 IFS=$' '
@@ -252,7 +283,8 @@ IFS=$' '
       x_from=$star_pos
   done
 unset IFS
-
+#print "debug: "$x_from""
+#print "debug: "$y_from""
 until mov; do
   true
 done
