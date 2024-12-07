@@ -118,8 +118,8 @@ query_position() {
   print '#!/usr/bin/env zsh' > /tmp/aoc_day6/query
   print '' >> /tmp/aoc_day6/query
   print 'fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)' >> /tmp/aoc_day6/query
-  print 'autoload libmiscinit' >> /tmp/aoc_day6/query
-  print 'libmiscinit' >> /tmp/aoc_day6/query
+  print 'autoload isfile' >> /tmp/aoc_day6/query
+#  print 'libmiscinit' >> /tmp/aoc_day6/query
   #env setup
   print "x_coord="$x_coord"" >> /tmp/aoc_day6/query
   print "y_coord="$y_coord"" >> /tmp/aoc_day6/query
