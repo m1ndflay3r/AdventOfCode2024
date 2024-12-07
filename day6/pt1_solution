@@ -7,11 +7,15 @@ autoload libmiscinit
 libmiscinit
 
 ! isfile ./input_arrays && \
+  ./convert_to_arrays
+
+! isfile ./input_arrays && \
   print "Could not find puzzle input arrays! Did you run convert_to_arrays?" && \
   return 1
 
 array_count=130
 indice_count=130
+result_counter=0
 
 #array_count=10
 #indice_count=10
@@ -24,12 +28,12 @@ update_position() {
   # char to be swapped in
   update_char=$1
   # error if insufficient input
-  [ -z "$x_coord" ] || [ -z "$y_coord" ] || [ -z "$1" ] && \
+  ([ -z "$x_coord" ] || [ -z "$y_coord" ] || [ -z "$1" ]) && \
     print "update_position" && \
     print "usage: x_coord= y_coord= update_position <character>" && \
     return 1
   # error if out of bounds update attempt
-  [ "$x_coord" -gt "$indice_count" ] || [ "$y_coord" -gt "$array_count" ] && \
+  ([ "$x_coord" -gt "$indice_count" ] || [ "$y_coord" -gt "$array_count" ]) && \
     print "Error: out of bounds position update!" && \
     return 1
   # write pos. update script (I know, I know)
@@ -94,12 +98,12 @@ update_position() {
 
 query_position() {
   # error if insufficient input
-  [ -z "$x_coord" ] || [ -z "$y_coord" ] && \
+  ([ -z "$x_coord" ] || [ -z "$y_coord" ]) && \
     print "query_position" && \
     print "usage: x_coord= y_coord= query_position <character>" && \
     return 1
   # error if out of bounds query attempt
-  [ "$x_coord" -gt "$indice_count" ] || [ "$y_coord" -gt "$array_count" ] && \
+  ([ "$x_coord" -gt "$indice_count" ] || [ "$y_coord" -gt "$array_count" ]) && \
     print "Error: out of bounds position query!" && \
     return 1
   rm -rf ./query
@@ -148,18 +152,110 @@ search_position() {
         break
       test_position=$(query_position)
       [ "$test_position" = "$do_search" ] && \
-        print ""$x_coord" "$y_coord"" #&& \
-#        found=1
+        print ""$x_coord" "$y_coord"" && \
+        found=1
     done
-#    [ "$found" = 1 ] && \
-#      break
+    [ "$found" = 1 ] && \
+      break
   done
 }
 
-x_coord=3 y_coord=3 query_position
-x_coord=3 y_coord=3 update_position Y
-x_coord=3 y_coord=3 query_position
-search_position '#'
+mov() {
+  invalid=0
+  ([ -z "$x_from" ] || [ -z "$y_from" ]) && \
+    print "Error: invalid mov call" && \
+    return 1
+
+  ([ "$y_from" -gt "$array_count" ] || \
+   [ "$x_from" -gt "$indice_count" ]) && \
+    invalid=1
+
+  ([ "$y_from" -le "0" ] || \
+   [ "$x_from" -le "0" ]) && \
+    invalid=1
+
+  [ "$invalid" = 1 ] && \
+    print "Error: out-of-bounds move attempt!" && \
+    print "$result_counter" && \
+    return 1
+
+  # fetch contents of indice to be moved
+  x_coord=$x_from
+  y_coord=$y_from
+  tobe_moved=$(query-position)
+
+  # set coord based on char
+  [ "$tobe_moved" = '^' ] && \
+    y_coord=$((y_coord+1))
+  [ "$tobe_moved" = 'v' ] && \
+    y_coord=$((y_coord-1))
+  [ "$tobe_moved" = '<' ] && \
+    x_coord=$((x_coord-1))
+  [ "$tobe_moved" = '>' ] && \
+    x_coord=$((x_coord+1))
+  # if out of bounds
+  ([ "$x_coord" -gt "$indice_count" ] || \
+   [ "$x_coord" -le "0" ] || \
+   [ "$y_coord" -gt "$array_count" ] || \
+   [ "$y_coord" -le "0" ]) && \
+    print "Attempted move out of bounds! exiting" && \
+    print "result: "$result_counter"" && \
+    exit 0
+  # query move to position for obstacle
+  moveto=$(query_position)
+  if [ "$moveto" = '#' ]; then
+    x_coord=$x_from
+    y_coord=$y_from
+    comp_switch=0
+    ([ "$tobe_moved" = '^' ] && \
+     [ "$comp_switch" = 0 ]) && \
+      update_position '>' && \
+      comp_switch=1
+    ([ "$tobe_moved" = '>' ] && \
+     [ "$comp_switch" = 0 ]) && \
+      update_position 'v' && \
+      comp_switch=1
+    ([ "$tobe_moved" = 'v' ] && \
+     [ "$comp_switch" = 0 ]) && \
+      update_position '<' && \
+      comp_switch=1
+    ([ "$tobe_moved" = '<' ] && \
+     [ "$comp_switch" = 0 ]) && \
+      update_position '^' && \
+      comp_switch=1
+    return 2
+  else
+    update_position $tobe_moved
+    x_to=$x_coord
+    y_to=$y_coord
+    x_coord=$x_from
+    y_coord=$y_from
+    update_position $moveto
+    result_counter=$((result_counter+1))
+    export x_from=$x_to
+    export y_from=$y_to
+    print "$result_counter"
+    return 3
+  fi
+}
+
+print "           Fetching starting position..."
+print "(this program isnt hanging, search is just slow)"
+starting_position=$(search_position '^')
+print "begin solve"
+unset x_from
+unset y_from
+IFS=$' '
+  for star_pos in $=starting_position; do
+    ! [ -z "$x_from" ] && \
+      y_from=$star_pos || \
+      x_from=$star_pos
+  done
+unset IFS
+
+until mov; do
+  true
+done
 
 ##cleanup
 rm -rf ./ledger
