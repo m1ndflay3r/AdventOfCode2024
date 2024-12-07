@@ -262,9 +262,6 @@ mov() {
     update_position $tobe_moved
     x_to=$x_coord
     y_to=$y_coord
-#    x_coord=$x_from
-#    y_coord=$y_from
-#    update_position $moveto
     ziscrossed=0
     check_crossed=""$x_coord""$y_coord""
     for chkcross in $=already_crossed; do
@@ -277,6 +274,12 @@ mov() {
       result_counter=$((result_counter+1)) && \
       already_crossed+=("$check_crossed")
 #      print "not crossed, adding"
+#    (["$y_from" -lt "$y_to" ] || [ "$y_to" -lt "$y_from" ]) && \
+#      x_coord=$x_from && \
+#      y_coord=$y_from && \
+#      update_position $moveto && \
+#      x_coord=$x_to && \
+#      y_coord=$y_to
     export x_from=$x_to
     export y_from=$y_to
     print "$result_counter"
