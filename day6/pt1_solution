@@ -167,6 +167,24 @@ search_position() {
   done
 }
 
+draw_grid() {
+  x_coord=0
+  y_coord=0
+  while true; do
+    print ''
+    y_coord=$((y_coord+1))
+    [ "$y_coord" = "$((array_count+1))" ] && \
+      break
+    x_coord=0
+    while true; do
+      x_coord=$((x_coord+1))
+      [ "$x_coord" = "$((indice_count+1))" ] && \
+        break
+      print -n $(query_position)
+    done
+  done
+}
+
 mov() {
   invalid=0
   ([ -z "$x_from" ] || [ -z "$y_from" ]) && \
@@ -262,6 +280,8 @@ mov() {
     export x_from=$x_to
     export y_from=$y_to
     print "$result_counter"
+#    clear
+#    draw_grid
     return 3
   fi
 }
@@ -284,6 +304,7 @@ unset IFS
 #print "debug: "$y_from""
 until mov; do
   true
+#  sleep 1
 done
 
 ##cleanup
