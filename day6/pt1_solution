@@ -182,7 +182,7 @@ mov() {
   # fetch contents of indice to be moved
   x_coord=$x_from
   y_coord=$y_from
-  tobe_moved=$(query-position)
+  tobe_moved=$(query_position)
 
   # set coord based on char
   [ "$tobe_moved" = '^' ] && \
