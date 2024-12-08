@@ -107,6 +107,7 @@ for indice in $=daysev_input; do
       print "report match to "$ind_result""
     unset zeq_new_str
   done
+  output_result=5837374519342
 done
 unset IFS
 
