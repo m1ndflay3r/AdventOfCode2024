@@ -5,13 +5,22 @@ fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
 autoload libmiscinit
 libmiscinit
 
+output_result=0
+
 ! isfile ./permutator && \
   cc ./permutator.c -o permutator
 ! isfile ./permutator && \
   print "Error: permutator not found, and your compiler is broken!" && \
   return 1
 
+! isfile ./parser && \
+  cc ./parser.c -o parser
+! isfile ./parser && \
+  print "Error: parser not found, and your compiler is broken!" && \
+  return 1
+
 alias permutator="./permutator"
+alias parser="./parser"
 
 ! isfile ./input && \
   print "Error: cannot find puzzle input! are you in the right directory?" && \
@@ -70,6 +79,35 @@ for indice in $=daysev_input; do
       ind_permut_arr+=("$permut_cln")
     done
   unset IFS
+  #check each possible permutation against string to see which equals target result
+  for perm in $=ind_permut_arr; do
+    unset eq_new_str
+    IFS=$' '
+    for i in $=ind_equation; do
+      perm_insert=${perm: :1}
+      perm=${perm:1}
+      eq_new_str=""$eq_new_str""$i""$perm_insert""
+    done
+    unset IFS
+    print $eq_new_str
+    #convert permutation-inserted string to zsh format and equate
+    rm -rf /tmp/day7pt1
+    print '#!/usr/bin/env zsh' > /tmp/day7pt1
+    print '' >> /tmp/day7pt1
+    print -n 'print ' >> /tmp/day7pt1
+    parser "$eq_new_str" >> /tmp/day7pt1
+    cat /tmp/day7pt1
+    chmod 755 /tmp/day7pt1
+    zeq_new_str=$(/tmp/day7pt1)
+    print "result calculated is "$zeq_new_str""
+    rm -rf /tmp/day7pt1
+    #if result of calculation equals target result, add target result to output total
+    [ "$zeq_new_str" = "$ind_result" ] && \
+      output_result=$((output_result+ind_result)) && \
+      print "report match to "$ind_result""
+    unset zeq_new_str
+  done
 done
 unset IFS
 
+print $output_result
