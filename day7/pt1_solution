@@ -1,0 +1,13 @@
+#!/usr/bin/env zsh
+
+## env setup
+fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
+autoload libmiscinit
+libmiscinit
+
+## fetch input
+daysev_input=$(fox-fr ./input)
+
+## operators for testing purpose
+operators=('*'
+           '+')
