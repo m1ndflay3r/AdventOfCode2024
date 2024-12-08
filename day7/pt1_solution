@@ -6,8 +6,35 @@ autoload libmiscinit
 libmiscinit
 
 ## fetch input
-daysev_input=$(fox-fr ./input)
+daysev_input_raw=$(fox-fr ./input)
+#conv to array
+unset daysev_input
+declare -a daysev_input
+IFS=$'\n'
+for input_raw in $=daysev_input_raw; do
+  daysev_input+=("$input_raw")
+done
+unset IFS
 
 ## operators for testing purpose
 operators=('*'
            '+')
+
+
+## iterate over each array indice
+IFS=$'\n'
+for indice in $=daysev_input; do
+  #separate result from equation
+  unset ind_result
+  unset ind_equation
+  IFS=$':'
+  for sep in $=indice; do
+   ! [ -z "$ind_result" ] && \
+    ind_equation=$sep || \
+    ind_result=$sep
+  done
+  unset IFS
+  print $ind_result
+  print $ind_equation
+done
+unset IFS
