@@ -1,1 +1,0 @@
-/hdd/v1ru5/testing/AdventOfCode2024/day8/my_project/target/debug/my_project: /hdd/v1ru5/testing/AdventOfCode2024/day8/my_project/src/input.txt /hdd/v1ru5/testing/AdventOfCode2024/day8/my_project/src/main.rs
