@@ -1,0 +1,32 @@
+#!/usr/bin/env zsh
+
+## env setup
+fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
+autoload libmiscinit
+libmiscinit
+
+! isfile ./input && \
+  print "Could not find puzzle input! Are you in the right directory?" && \
+  return 1
+
+## fetch input
+# read input into 2d array
+2d_arr delete dayten
+fox-fr ./input | 2d_arr create dayten
+# fetch indice count
+indice_count=$(fox-fr /tmp/libmisc_2d_arr/dayten/indice_count)
+# fetch array count
+array_count=$(fox-fr /tmp/libmisc_2d_arr/dayten/array_count)
+
+## begin locate
+# search 2d array for every coordinate value containing 0, since this will always be the start of a trail head
+trailheads_raw=$(2d_arr search dayten 0)
+#convert trailheads string to array
+unset trailheads_arr
+declare -a trailheads_arr
+IFS=$'\n'
+  for trailheads in $=trailheads_raw; do
+    trailheads_arr+=("$trailheads")
+  done
+unset IFS
+
