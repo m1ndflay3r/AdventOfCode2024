@@ -31,6 +31,8 @@ uncompress_input() {
     return 0
   }
   blockhandle() {
+    [ "$char" = 0 ] && \
+      break
     block_count=0
     while true; do
       block_count=$((block_count+1))
