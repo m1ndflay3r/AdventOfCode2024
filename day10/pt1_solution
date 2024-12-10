@@ -30,3 +30,16 @@ IFS=$'\n'
   done
 unset IFS
 
+## iterate over zeros
+for trailhead in $=trailheads_arr; do
+  #separate x and y coords
+  IFS=$' '
+  unset x
+  unset y
+  for coord in $=trailhead; do
+    [ -z "$x" ] && \
+      x="$coord" || \
+      y="$coord"
+  done
+  unset IFS
+done
