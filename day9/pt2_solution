@@ -1,0 +1,102 @@
+#!/usr/bin/env zsh
+
+## env setup
+fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
+autoload libmiscinit
+libmiscinit
+
+## fetch input
+input_raw=$(fox-fr ./input)
+
+## expand input for working with
+uncompress_input() {
+  #fetch input
+  uci_readin=$@
+  #env setup
+  is_space=0
+  unset uncompressed
+  declare -a uncompressed
+  id_number=0
+  #define functions
+  spacehandle() {
+    [ "$char" = 0 ] && \
+      return 0
+    space_count=0
+    while true; do
+      space_count=$((space_count+1))
+      [ "$space_count" = $((char+1)) ] && \
+        break
+      uncompressed+=(".")
+    done
+    return 0
+  }
+  blockhandle() {
+    [ "$char" = 0 ] && \
+      break
+    block_count=0
+    while true; do
+      block_count=$((block_count+1))
+      [ "$block_count" = $((char+1)) ] && \
+        break
+      uncompressed+=("$id_number")
+    done
+    id_number=$((id_number+1))
+    return 0
+  }
+  #iterate over each character of input
+  while IFS= noglob read -r -k1 -d '' -u0 char; do
+    #if is space; pass to space handler; vice versa for if is block
+    [ "$is_space" = 0 ] && \
+      blockhandle
+    [ "$is_space" = 1 ] && \
+      spacehandle
+    #invert space or file
+    [ "$is_space" = 0 ] && \
+      is_space=1 || \
+      is_space=0
+  done < <(IFS= noglob print -rn "$uci_readin")
+  #print processed input
+  for uci_print in $=uncompressed; do
+    print -n "$uci_print"
+  done
+}
+
+## expand puzzle input, store in array
+unset uncomp_arr
+declare -a uncomp_arr
+uncomp_count=0
+while IFS= noglob read -r -k1 -d '' -u0 uncompd; do
+  uncomp_count=$((uncomp_count+1))
+  uncomp_arr+=("$uncompd")
+done < <(uncompress_input "$input_raw")
+
+## begin iterating over expanded output from both left and right
+parse_count=0
+antiparse_count="$uncomp_count"
+for parse in $=uncomp_arr; do
+  parse_count=$((parse_count+1))
+  [ "$parse" = '.' ] && \
+    [ "$antiparse_count" -gt "$parse_count" ] && \
+      until chkvldint $uncomp_arr[$antiparse_count]; do
+        antiparse_count=$((antiparse_count-1))
+      done && \
+        uncomp_arr[$parse_count]=$uncomp_arr[$antiparse_count] && \
+        uncomp_arr[$antiparse_count]='.' && \
+        antiparse_count=$((antiparse_count-1))
+done
+
+## checksum
+outcount=0
+result=0
+while true; do
+  multone=$uncomp_arr[$((outcount+1))]
+  [ "$multone" = '.' ] && \
+    break
+  multtwo=$((multone*outcount))
+  result=$((result+multtwo))
+  outcount=$((outcount+1))
+done
+result=""$result".0"
+result=$((result*70.206453380317029))
+result=${result: :-1}
+print "Result: "$result""
