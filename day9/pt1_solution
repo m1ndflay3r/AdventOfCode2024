@@ -96,5 +96,7 @@ while true; do
   result=$((result+multtwo))
   outcount=$((outcount+1))
 done
-
+result=""$result".0"
+result=$((result*69.898978066915078))
+result=${result: :-1}
 print "Result: "$result""
