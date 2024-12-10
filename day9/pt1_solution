@@ -8,6 +8,7 @@ libmiscinit
 ## fetch input
 input_raw=$(fox-fr ./input)
 
+## expand input for working with
 uncompress_input() {
   #fetch input
   uci_readin=$@
@@ -58,7 +59,7 @@ uncompress_input() {
   done
 }
 
-#expand puzzle input, store in array
+## expand puzzle input, store in array
 unset uncomp_arr
 declare -a uncomp_arr
 uncomp_count=0
@@ -67,8 +68,7 @@ while IFS= noglob read -r -k1 -d '' -u0 uncompd; do
   uncomp_arr+=("$uncompd")
 done < <(uncompress_input "$input_raw")
 
-#begin iterating over expanded output from left looking for '.'.
-#track which indice we're on for loop break
+## begin iterating over expanded output from both left and right
 parse_count=0
 antiparse_count="$uncomp_count"
 for parse in $=uncomp_arr; do
@@ -83,7 +83,16 @@ for parse in $=uncomp_arr; do
         antiparse_count=$((antiparse_count-1))
 done
 
-for i in $=uncomp_arr; do
-  print -n $i
+## checksum
+outcount=0
+result=0
+while true; do
+  multone=$uncomp_arr[$((outcount+1))]
+  [ "$multone" = '.' ] && \
+    break
+  multtwo=$((multone*outcount))
+  result=$((result+multtwo))
+  outcount=$((outcount+1))
 done
-print
+
+print "Result: "$result""
