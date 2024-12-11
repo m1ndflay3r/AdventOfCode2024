@@ -18,8 +18,13 @@ indice_count=$(fox-fr /tmp/libmisc_2d_arr/dayten/indice_count)
 # fetch array count
 array_count=$(fox-fr /tmp/libmisc_2d_arr/dayten/array_count)
 
+#create empty 2d arr of same size as input for deciphered values
+2d_arr delete dayten_trails
+blank=1 2d_arr create dayten_trails $indice_count $array_count
+
 ## begin locate
 # search 2d array for every coordinate value containing 0, since this will always be the start of a trail head
+print "DEBUG: finding zeros..."
 trailheads_raw=$(2d_arr search dayten 0)
 #convert trailheads string to array
 unset trailheads_arr
@@ -30,7 +35,10 @@ IFS=$'\n'
   done
 unset IFS
 
+print "DEBUG: begin scan"
+
 ## iterate over zeros
+IFS=$'\n'
 for trailhead in $=trailheads_arr; do
   #separate x and y coords
   IFS=$' '
@@ -42,4 +50,53 @@ for trailhead in $=trailheads_arr; do
       y="$coord"
   done
   unset IFS
+  x_zero="$x"
+  y_zero="$y"
+  directions=('up'
+              'down'
+              'left'
+              'right')
+  for direction in $=directions; do
+    trailpoint=0
+    while true; do
+      [ "$direction" = up ] && \
+        y=$((y-1))
+      [ "$direction" = down ] && \
+        y=$((y+1))
+      [ "$direction" = left ] && \
+        x=$((x-1))
+      [ "$direction" = right ] && \
+        x=$((x+1))
+      trailpoint=$((trailpoint+1))
+      trailcheck=$(2d_arr query dayten $x $y)
+      print "DEBUG: checking x"$x" y"$y" (x"$x_zero" y"$y_zero")"
+      ! [ "$trailcheck" = "$trailpoint" ] && \
+        print "DEBUG: last check not trail (looking for:"$trailpoint" got:"$trailcheck"), skipping to next check" && \
+        break
+      [ "$trailcheck" = 9 ] && \
+        while true; do
+          2d_arr update dayten_trails "$trailcheck" $x $y
+          print "DEBUG: add "$trailcheck" (x"$x" y"$y") to trails arr"
+          [ "$direction" = up ] && \
+            y=$((y+1))
+          [ "$direction" = down ] && \
+            y=$((y-1))
+          [ "$direction" = left ] && \
+            x=$((x+1))
+          [ "$direction" = right ] && \
+            x=$((x-1))
+          trailcheck=$(2d_arr query dayten $x $y)
+          [ "$x" = "$x_zero" ] && \
+          [ "$y" = "$y_zero" ] && \
+            2d_arr update dayten_trails "$trailcheck" $x $y && \
+            print "DEBUG: add "$trailcheck" (x"$x" y"$y") to trails arr" && \
+            break
+        done && \
+        break
+    done
+  done
 done
+unset IFS
+
+print "DEBUG: checks complete. Drawing trails arr..."
+2d_arr draw dayten_trails
