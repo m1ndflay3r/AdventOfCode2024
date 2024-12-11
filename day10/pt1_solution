@@ -50,50 +50,93 @@ for trailhead in $=trailheads_arr; do
       y="$coord"
   done
   unset IFS
+  #save original zero coordinates to variable for later referencing
   x_zero="$x"
   y_zero="$y"
+  print "checking trailhead "$x_zero" "$y_zero""
   directions=('up'
               'down'
               'left'
               'right')
+  #starting from coordinates of 0; search every direction for possible continuation of pattern
   for direction in $=directions; do
     trailpoint=0
-    while true; do
-      [ "$direction" = up ] && \
-        y=$((y-1))
-      [ "$direction" = down ] && \
-        y=$((y+1))
-      [ "$direction" = left ] && \
-        x=$((x-1))
-      [ "$direction" = right ] && \
-        x=$((x+1))
-      trailpoint=$((trailpoint+1))
-      trailcheck=$(2d_arr query dayten $x $y)
-      print "DEBUG: checking x"$x" y"$y" (x"$x_zero" y"$y_zero")"
-      ! [ "$trailcheck" = "$trailpoint" ] && \
-        print "DEBUG: last check not trail (looking for:"$trailpoint" got:"$trailcheck"), skipping to next check" && \
-        break
-      [ "$trailcheck" = 9 ] && \
-        while true; do
-          2d_arr update dayten_trails "$trailcheck" $x $y
-          print "DEBUG: add "$trailcheck" (x"$x" y"$y") to trails arr"
-          [ "$direction" = up ] && \
-            y=$((y+1))
-          [ "$direction" = down ] && \
-            y=$((y-1))
-          [ "$direction" = left ] && \
-            x=$((x+1))
-          [ "$direction" = right ] && \
-            x=$((x-1))
-          trailcheck=$(2d_arr query dayten $x $y)
-          [ "$x" = "$x_zero" ] && \
-          [ "$y" = "$y_zero" ] && \
-            2d_arr update dayten_trails "$trailcheck" $x $y && \
-            print "DEBUG: add "$trailcheck" (x"$x" y"$y") to trails arr" && \
-            break
-        done && \
-        break
-    done
+    x=$x_zero
+    y=$y_zero
+    2d_arr update dayten_trails $trailpoint $x $y
+#    [ "$direction" = up ] && \
+#      y=$((y-1))
+#    [ "$direction" = down ] && \
+#      y=$((y+1))
+#    [ "$direction" = left ] && \
+#      x=$((x-1))
+#    [ "$direction" = right ] && \
+#      x=$((x+1))
+#    print "DEBUG: beginning of loop: Direction: "$direction" (there should be 4 of these per zero)"
+#    trailpoint=$((trailpoint+1))
+#    trailcheck=$(2d_arr query dayten $x $y)
+#    print "DEBUG: checking x"$x" y"$y" (x"$x_zero" y"$y_zero")"
+#    if ! [ "$trailcheck" = "$trailpoint" ]; then
+#      print "DEBUG: last check not trail (looking for:"$trailpoint" got:"$trailcheck"), skipping to next check"
+#      break
+#    else
+#      2d_arr update dayten_trails $trailpoint $x $y
+    #modify coordinate values based on which direction we're looking
+       dirswitch_count=0
+       while true; do
+        trailpoint=$((trailpoint+1))
+        [ "$direction" = up ] && \
+          y=$((y-1))
+        [ "$direction" = down ] && \
+          y=$((y+1))
+        [ "$direction" = left ] && \
+          x=$((x-1))
+        [ "$direction" = right ] && \
+          x=$((x+1))
+        trailcheck=$(2d_arr query dayten $x $y)
+        print "DEBUG: checking x"$x" y"$y" (x"$x_zero" y"$y_zero")"
+        [ "$trailcheck" = "$trailpoint" ] && \
+          2d_arr update dayten_trails $trailpoint $x $y
+        ! [ "$trailcheck" = "$trailpoint" ] && \
+          print "DEBUG: last check not trail (looking for:"$trailpoint" got:"$trailcheck"), reversing and changing direction" && \
+          print "direction was "$direction"" && \
+          do_change_direction=1 ||
+          do_change_direction=0
+          if [ "$do_change_direction" = 1 ]; then
+            dirswitch_isdone=0
+            [ "$direction" = up ] && \
+              direction=right && \
+              y=$((y+1)) && \
+              dirswitch_isdone=1
+
+            [ "$direction" = right ] && \
+            [ "$dirswitch_isdone" = 0 ] && \
+              direction=down && \
+              x=$((x-1)) && \
+              dirswitch_isdone=1
+
+            [ "$direction" = down ] && \
+            [ "$dirswitch_isdone" = 0 ] && \
+              direction=left && \
+              y=$((y-1)) && \
+              dirswitch_isdone=1
+
+            [ "$direction" = left ] && \
+            [ "$dirswitch_isdone" = 0 ] && \
+              direction=up && \
+              x=$((x+1)) && \
+              dirswitch_isdone=1
+          fi
+          [ "$do_change_direction" = 1 ] && \
+            print "changed direction to "$direction"" && \
+            dirswitch_counter=$((dirswitch_counter+1)) && \
+            trailpoint=$((trailpoint-1))
+        [ "$trailpoint" -ge 9 ] && \
+          break
+        [ "$dirswitch_counter" -ge 4 ] && \
+          break
+      done
+#    fi
   done
 done
 unset IFS
