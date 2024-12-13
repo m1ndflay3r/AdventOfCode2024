@@ -6,43 +6,131 @@ libmiscinit
 
 input=$(fox-fr ./input)
 
-polish_stone() {
-  [ "$stone" = 0 ] && \
-    print -n '1 ' && \
-    return 0
-  stoneln=$(getstrln "$stone")
-  isevennum "$stoneln" && {
-    haploid=$((stoneln/2))
-    stoneleft=$((${stone: :$haploid}))
-    stoneright=$((${stone:$haploid}))
-    print -n ""$stoneleft" "$stoneright" "
-    return 0
+isfile /tmp/dayeleven && \
+  rm -rf /tmp/dayeleven
+
+mkdir /tmp/dayeleven
+
+create_worker() {
+#  print "worker "$worker_id": got "$input" for input"
+  polish_stone() {
+    [ "$stone" = 0 ] && \
+      print -n '1 ' && \
+      return 0
+    stoneln=$(getstrln "$stone")
+    isevennum "$stoneln" && {
+      haploid=$((stoneln/2))
+      stoneleft=$((${stone: :$haploid}))
+      stoneright=$((${stone:$haploid}))
+      print -n ""$stoneleft" "$stoneright" "
+      return 0
+    }
+    print -n ""$(($stone*2024))" " && \
+      return 0
   }
-  print -n ""$(($stone*2024))" " && \
-    return 0
+
+  blinks=0
+  while true; do
+    blinks=$((blinks+1))
+    placeholder=""
+    IFS=$' '
+    for stone in $=input; do
+      placeholder=""$placeholder""$(polish_stone)""
+    done
+    unset IFS
+    input=$placeholder
+#    print "Worker "$worker_id" blink count: "$blinks""
+    [ "$blinks" = 5 ] && \
+      break
+  done
+
+  print -n "$input" > /tmp/dayeleven/$worker_id
+  return 0
 }
 
-blinks=0
-while true; do
-  blinks=$((blinks+1))
-  placeholder=""
+print "pass 1/5"
+## first pass (blinks=15)
+worker_input_count=0
+IFS=$' '
+print "Starting workers..."
+for distrib_input in $=input; do
+  worker_input_count=$((worker_input_count+1))
+#  print "pre-worker input "$distrib_input""
+  worker_id=$worker_input_count input="$distrib_input" create_worker &
+done
+unset IFS
+print "finished start workers"
+## >= second pass
+#continuously check for first pass until workers done
+wait_for_passes() {
+  print "pausing for worker completion..."
+  while true; do
+    check_worker_count=0
+    ls -a /tmp/dayeleven/* &> /dev/null && {
+      for worker_outputs in /tmp/dayeleven/*; do
+        check_worker_count=$((check_worker_count+1))
+      done
+      [ "$check_worker_count" -ge "$worker_input_count" ] && \
+        sleep 3 && \
+        break ||
+      sleep 1
+    } || \
+    sleep 1
+  done
+}
+wait_for_passes
+
+## 2nd pass
+mo_passes() {
+  print "combining worker outputs into next input"
+  rm -rf /tmp/dayeleven/input
+  for phagocytosis in $=/tmp/dayeleven/*; do
+    ! isfile /tmp/dayeleven/input && \
+      touch /tmp/dayeleven/input
+    cat "$phagocytosis" >> /tmp/dayeleven/input
+  done
+  unset input
+  input=$(fox-fr /tmp/dayeleven/input)
+  rm -rf /tmp/dayeleven
+  mkdir /tmp/dayeleven
+  worker_input_count=0
   IFS=$' '
-  for stone in $=input; do
-    placeholder=""$placeholder""$(polish_stone)""
+  print "starting workers..."
+  for distrib_input in $=input; do
+    worker_input_count=$((worker_input_count+1))
+#    print "pre-worker input "$distrib_input""
+    worker_id="$worker_input_count" input="$distrib_input" create_worker &
   done
   unset IFS
-  input=$placeholder
-  [ "$blinks" = 25 ] && \
+  print "finished start workers"
+}
+
+do_until_passes=4
+#set current pass to 1 since we already did one earlier
+current_pass=1
+while true; do
+  print "pass "$((current_pass+1))"/5"
+  mo_passes
+  wait_for_passes
+  current_pass=$((current_pass+1))
+  [ "$current_pass" -gt "$do_until_passes" ] && \
     break
 done
 
-stone_count=0
+print "combining final results for counting"
+final_total=0
+rm -rf /tmp/dayeleven/input
+for phagocytosis in /tmp/dayeleven/*; do
+  ! isfile /tmp/dayeleven/input && \
+    touch /tmp/dayeleven/input
+  cat $phagocytosis >> /tmp/dayeleven/input
+done
+print "doing final count"
+final_input=$(cat /tmp/dayeleven/input)
 IFS=$' '
-for stones in $=input; do
-  stone_count=$((stone_count+1))
+for thefinal_countdown in $=final_input; do
+  final_total=$((thefinal_countdown+final_total))
 done
 unset IFS
 
-print "$input"
-print
-print "Stone count:"$stone_count""
+print "$final_total"
