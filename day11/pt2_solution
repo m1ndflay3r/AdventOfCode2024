@@ -7,9 +7,11 @@ libmiscinit
 input=$(fox-fr ./input)
 
 isfile /tmp/dayeleven && \
+  rm -rf /tmp/dayeleven/* && \
   rm -rf /tmp/dayeleven
 
 isfile /tmp/dayeleven_tmp && \
+  rm -rf /tmp/dayeleven_tmp/* && \
   rm -rf /tmp/dayeleven_tmp
 
 mkdir /tmp/dayeleven
@@ -43,7 +45,7 @@ create_worker() {
     done
     unset IFS
     input=$placeholder
-    [ "$blinks" = 15 ] && \
+    [ "$blinks" = 5 ] && \
       break
   done
   print '' > /tmp/dayeleven_tmp/$worker_id
@@ -58,7 +60,9 @@ IFS=$' '
 print "Starting workers..."
 for distrib_input in $=input; do
   worker_input_count=$((worker_input_count+1))
-  worker_id=$worker_input_count input="$distrib_input" create_worker &|
+  until worker_id=$worker_input_count input="$distrib_input" create_worker &; do
+    wait
+  done
 done
 unset IFS
 print "finished start workers"
@@ -72,6 +76,7 @@ mo_passes() {
   print "combining worker outputs into next input"
   unset input
   input=$(cat /tmp/dayeleven/*)
+  rm -rf /tmp/dayeleven/*
   rm -rf /tmp/dayeleven
   mkdir /tmp/dayeleven
   worker_input_count=0
@@ -79,7 +84,9 @@ mo_passes() {
   print "starting workers..."
   for distrib_input in $=input; do
     worker_input_count=$((worker_input_count+1))
-    worker_id="$worker_input_count" input="$distrib_input" create_worker &
+    until worker_id="$worker_input_count" input="$distrib_input" create_worker &; do
+      wait
+    done
   done
   unset IFS
   print "finished start workers"
