@@ -86,7 +86,7 @@ mo_passes() {
   for distrib_input in $=input; do
     worker_input_count=$((worker_input_count+1))
     job_count=$((job_count+1))
-    [ "$job_count" = 99 ] && \
+    [ "$job_count" = 12 ] && \
       wait && \
       job_count=0
     worker_id="$worker_input_count" input="$distrib_input" create_worker &
