@@ -75,23 +75,25 @@ done
 mo_passes() {
   print "combining worker outputs into next input"
   unset input
-  input=$(cat /tmp/dayeleven/*)
+  worker_input_count=0
+  for do_recurse in /tmp/dayeleven/*; do
+    input=$(cat $do_recurse)
+    IFS=$' '
+    print "starting workers..."
+    job_count=0
+    for distrib_input in $=input; do
+      worker_input_count=$((worker_input_count+1))
+      job_count=$((job_count+1))
+      [ "$job_count" = 99 ] && \
+        wait && \
+        job_count=0
+      worker_id="$worker_input_count" input="$distrib_input" create_worker &
+    done
+    unset IFS
+  done
   rm -rf /tmp/dayeleven/*
   rm -rf /tmp/dayeleven
   mkdir /tmp/dayeleven
-  worker_input_count=0
-  IFS=$' '
-  print "starting workers..."
-  job_count=0
-  for distrib_input in $=input; do
-    worker_input_count=$((worker_input_count+1))
-    job_count=$((job_count+1))
-    [ "$job_count" = 12 ] && \
-      wait && \
-      job_count=0
-    worker_id="$worker_input_count" input="$distrib_input" create_worker &
-  done
-  unset IFS
   print "finished start workers"
 }
 
@@ -111,11 +113,12 @@ done
 
 print "counting final results"
 final_total=0
-final_input=$(cat /tmp/dayeleven/*)
-IFS=$' '
-for thefinal_countdown in $=final_input; do
-  final_total=$((1+final_total))
+for do_total_finally in /tmp/dayeleven/*; do
+  final_input=$(cat $do_total_finally)
+  IFS=$' '
+  for thefinal_countdown in $=final_input; do
+    final_total=$((1+final_total))
+  done
+  unset IFS
 done
-unset IFS
-
 print "$final_total"
