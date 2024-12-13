@@ -76,7 +76,13 @@ mo_passes() {
   print "combining worker outputs into next input"
   unset input
   worker_input_count=0
-  for do_recurse in /tmp/dayeleven/*; do
+  rm -rf /tmp/dayelev/*
+  rm -rf /tmp/dayelev
+  cp -r /tmp/dayeleven /tmp/dayelev
+  rm -rf /tmp/dayeleven/*
+  rm -rf /tmp/dayeleven
+  mkdir /tmp/dayeleven
+  for do_recurse in /tmp/dayelev/*; do
     input=$(cat $do_recurse)
     IFS=$' '
     print "starting workers..."
@@ -91,9 +97,6 @@ mo_passes() {
     done
     unset IFS
   done
-  rm -rf /tmp/dayeleven/*
-  rm -rf /tmp/dayeleven
-  mkdir /tmp/dayeleven
   print "finished start workers"
 }
 
