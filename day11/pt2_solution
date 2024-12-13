@@ -9,6 +9,9 @@ input=$(fox-fr ./input)
 isfile /tmp/dayeleven && \
   rm -rf /tmp/dayeleven
 
+isfile /tmp/dayeleven_tmp && \
+  rm -rf /tmp/dayeleven_tmp
+
 mkdir /tmp/dayeleven
 mkdir /tmp/dayeleven_tmp
 
@@ -40,8 +43,7 @@ create_worker() {
     done
     unset IFS
     input=$placeholder
-#    print "Worker "$worker_id" blink count: "$blinks""
-    [ "$blinks" = 5 ] && \
+    [ "$blinks" = 15 ] && \
       break
   done
   print '' > /tmp/dayeleven_tmp/$worker_id
@@ -56,13 +58,14 @@ IFS=$' '
 print "Starting workers..."
 for distrib_input in $=input; do
   worker_input_count=$((worker_input_count+1))
-#  print "pre-worker input "$distrib_input""
   worker_id=$worker_input_count input="$distrib_input" create_worker &
 done
 unset IFS
 print "finished start workers"
 #wait_for_pass
-wait
+until isfile /tmp/dayeleven_tmp/$worker_input_count; do
+  sleep 1
+done
 
 ## => 2nd pass
 mo_passes() {
@@ -76,7 +79,6 @@ mo_passes() {
   print "starting workers..."
   for distrib_input in $=input; do
     worker_input_count=$((worker_input_count+1))
-    print -n "pre-worker input "$distrib_input""
     worker_id="$worker_input_count" input="$distrib_input" create_worker &
   done
   unset IFS
@@ -89,7 +91,9 @@ current_pass=1
 while true; do
   print "pass "$((current_pass+1))"/5"
   mo_passes
-  wait
+  until isfile /tmp/dayeleven_tmp/$worker_input_count; do
+    sleep 1
+  done
   current_pass=$((current_pass+1))
   [ "$current_pass" -gt "$do_until_passes" ] && \
     break
@@ -100,7 +104,7 @@ final_total=0
 final_input=$(cat /tmp/dayeleven/*)
 IFS=$' '
 for thefinal_countdown in $=final_input; do
-  final_total=$((thefinal_countdown+final_total))
+  final_total=$((1+final_total))
 done
 unset IFS
 
