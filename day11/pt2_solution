@@ -82,11 +82,14 @@ mo_passes() {
   worker_input_count=0
   IFS=$' '
   print "starting workers..."
+  job_count=0
   for distrib_input in $=input; do
     worker_input_count=$((worker_input_count+1))
-    until worker_id="$worker_input_count" input="$distrib_input" create_worker &; do
-      wait
-    done
+    job_count=$((job_count+1))
+    [ "$job_count" = 99 ] && \
+      wait && \
+      job_count=0
+    worker_id="$worker_input_count" input="$distrib_input" create_worker &
   done
   unset IFS
   print "finished start workers"
