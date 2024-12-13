@@ -58,7 +58,7 @@ IFS=$' '
 print "Starting workers..."
 for distrib_input in $=input; do
   worker_input_count=$((worker_input_count+1))
-  worker_id=$worker_input_count input="$distrib_input" create_worker &
+  worker_id=$worker_input_count input="$distrib_input" create_worker &|
 done
 unset IFS
 print "finished start workers"
