@@ -10,6 +10,7 @@ isfile /tmp/dayeleven && \
   rm -rf /tmp/dayeleven
 
 mkdir /tmp/dayeleven
+mkdir /tmp/dayeleven_tmp
 
 create_worker() {
 #  print "worker "$worker_id": got "$input" for input"
@@ -43,7 +44,7 @@ create_worker() {
     [ "$blinks" = 5 ] && \
       break
   done
-
+  print '' > /tmp/dayeleven_tmp/$worker_id
   print -n "$input" > /tmp/dayeleven/$worker_id
   return 0
 }
@@ -60,37 +61,14 @@ for distrib_input in $=input; do
 done
 unset IFS
 print "finished start workers"
-## >= second pass
-#continuously check for first pass until workers done
-wait_for_passes() {
-  print "pausing for worker completion..."
-  while true; do
-    check_worker_count=0
-    ls -a /tmp/dayeleven/* &> /dev/null && {
-      for worker_outputs in /tmp/dayeleven/*; do
-        check_worker_count=$((check_worker_count+1))
-      done
-      [ "$check_worker_count" -ge "$worker_input_count" ] && \
-        sleep 3 && \
-        break ||
-      sleep 1
-    } || \
-    sleep 1
-  done
-}
-wait_for_passes
+#wait_for_pass
+wait
 
-## 2nd pass
+## => 2nd pass
 mo_passes() {
   print "combining worker outputs into next input"
-  rm -rf /tmp/dayeleven/input
-  for phagocytosis in $=/tmp/dayeleven/*; do
-    ! isfile /tmp/dayeleven/input && \
-      touch /tmp/dayeleven/input
-    cat "$phagocytosis" >> /tmp/dayeleven/input
-  done
   unset input
-  input=$(fox-fr /tmp/dayeleven/input)
+  input=$(cat /tmp/dayeleven/*)
   rm -rf /tmp/dayeleven
   mkdir /tmp/dayeleven
   worker_input_count=0
@@ -98,7 +76,7 @@ mo_passes() {
   print "starting workers..."
   for distrib_input in $=input; do
     worker_input_count=$((worker_input_count+1))
-#    print "pre-worker input "$distrib_input""
+    print -n "pre-worker input "$distrib_input""
     worker_id="$worker_input_count" input="$distrib_input" create_worker &
   done
   unset IFS
@@ -111,22 +89,15 @@ current_pass=1
 while true; do
   print "pass "$((current_pass+1))"/5"
   mo_passes
-  wait_for_passes
+  wait
   current_pass=$((current_pass+1))
   [ "$current_pass" -gt "$do_until_passes" ] && \
     break
 done
 
-print "combining final results for counting"
+print "counting final results"
 final_total=0
-rm -rf /tmp/dayeleven/input
-for phagocytosis in /tmp/dayeleven/*; do
-  ! isfile /tmp/dayeleven/input && \
-    touch /tmp/dayeleven/input
-  cat $phagocytosis >> /tmp/dayeleven/input
-done
-print "doing final count"
-final_input=$(cat /tmp/dayeleven/input)
+final_input=$(cat /tmp/dayeleven/*)
 IFS=$' '
 for thefinal_countdown in $=final_input; do
   final_total=$((thefinal_countdown+final_total))
