@@ -31,9 +31,21 @@ while true; do
     placeholder=""$placeholder""$(polish_stone)""
   done
   unset IFS
+  DEBUG=1 && print "DEBUG: blink "$blinks""
   input=$placeholder
+  print "$input"
   [ "$blinks" = 25 ] && \
     break
+  DEBUG=1 && {
+    stone_count=0
+    IFS=$' '
+    for stones in $=input; do
+      stone_count=$((stone_count+1))
+    done
+    unset IFS
+
+    print "Stone count:"$stone_count""
+  }
 done
 
 stone_count=0
@@ -43,6 +55,4 @@ for stones in $=input; do
 done
 unset IFS
 
-print "$input"
-print
 print "Stone count:"$stone_count""

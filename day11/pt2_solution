@@ -1,181 +1,71 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env python3
 
-fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
-autoload libmiscinit
-libmiscinit
+from itertools import groupby
+from operator import itemgetter
 
-input=$(fox-fr ./input)
 
-isfile /tmp/dayeleven && {
-  rm -rf /tmp/dayeleven/*
-  rm -rf /tmp/dayeleven
-}
+def rule1(x):
+    if x == 0:
+        return [1]
+    return []
 
-isfile /tmp/dayeleven_tmp && {
-  rm -rf /tmp/dayeleven_tmp/*
-  rm -rf /tmp/dayeleven_tmp
-}
 
-mkdir /tmp/dayeleven
-mkdir /tmp/dayeleven_tmp
+def rule2(x):
+    digits = str(x)
+    num_digits = len(digits)
+    if num_digits % 2 == 0:
+        mid = num_digits // 2
+        lhs, rhs = digits[:mid], digits[mid:]
+        return [int(lhs), int(rhs)]
+    return []
 
-# j = thread count; using for familiarity
-[ -z "$j" ] && \
-  j=12
 
-create_worker() {
-  polish_stone() {
-    [ "$stone" = 0 ] && \
-      print -n '1 ' && \
-      return 0
-    stoneln=$(getstrln "$stone")
-    isevennum "$stoneln" && {
-      haploid=$((stoneln/2))
-      stoneleft=$((${stone: :$haploid}))
-      stoneright=$((${stone:$haploid}))
-      print -n ""$stoneleft" "$stoneright" "
-      return 0
-    }
-    print -n ""$(($stone*2024))" " && \
-      return 0
-  }
+def rule3(x):
+    return [x * 2024]
 
-  blinks=0
-  while true; do
-    blinks=$((blinks+1))
-    placeholder=""
-    IFS=$' '
-    for stone in $=input; do
-      placeholder=""$placeholder""$(polish_stone)""
-    done
-    unset IFS
-    input=$placeholder
-    [ "$blinks" = 5 ] && \
-      break
-  done
-  print -n "$input" > /tmp/dayeleven/$worker_id
-  print '' > /tmp/dayeleven_tmp/$worker_id
-  return 0
-}
 
-print "PASS 1/15"
-worker_input_count=0
-IFS=$' '
-print "Starting workers on "$j" threads"
-for distrib_input in $=input; do
-  worker_input_count=$((worker_input_count+1))
-  job_count=$(query_jobs)
-  [ "$job_count" -ge "$j" ] && {
-    until [ "$(query_jobs)" -lt "$j" ]; do
-      sleep 0.5
-    done
-  }
-  worker_id=$worker_input_count input="$distrib_input" create_worker &
-done
-unset IFS
-print "Waiting for workers to finish"
+def apply_rules(nums):
+    result = []
+    for x in nums:
+        result.extend(rule1(x) or rule2(x) or rule3(x))
+    return result
 
-until isfile /tmp/dayeleven_tmp/$worker_input_count; do
-  sleep 1
-done
-wait
 
-## => 2nd pass
-mo_passes() {
-  print "Combining worker outputs into next input"
-  unset input
-  worker_input_count=0
-  rm -rf /tmp/dayelev/*
-  rm -rf /tmp/dayelev
-  cp -r /tmp/dayeleven /tmp/dayelev
-  rm -rf /tmp/dayeleven/*
-  rm -rf /tmp/dayeleven
-  mkdir /tmp/dayeleven
-  print "Starting workers on "$j" threads"
-  for do_recurse in /tmp/dayelev/*; do
-    input=$(cat $do_recurse)
-    IFS=$' '
-    for distrib_input in $=input; do
-      worker_input_count=$((worker_input_count+1))
-      job_count=$(query_jobs)
-      [ "$job_count" -ge "$j" ] && {
-        until [ "$(query_jobs)" -lt "$j" ]; do
-          sleep 0.5
-        done
-      }
-      worker_id="$worker_input_count" input="$distrib_input" create_worker &
-    done
-    unset IFS
-  done
-  print "Waiting for workers to finish"
-}
+def merge_histogram(histogram):
+    histogram.sort(key=itemgetter(0))
+    return [(key, sum(item[1] for item in group)) for key, group in groupby(histogram, key=itemgetter(0))]
 
-do_until_passes=14
-#set current pass to 1 since we already did one earlier
-current_pass=1
-while true; do
-  print "PASS "$((current_pass+1))"/15"
-  mo_passes
-  until isfile /tmp/dayeleven_tmp/$worker_input_count; do
-    sleep 1
-  done
-  wait
-  current_pass=$((current_pass+1))
-  [ "$current_pass" -gt "$do_until_passes" ] && \
-    break
-done
 
-print "Counting final results"
+def apply_rules2(histogram):
+    new_histogram = []
+    for x, count in histogram:
+        transformed = rule1(x) or rule2(x) or rule3(x)
+        new_histogram.extend((val, count) for val in transformed)
+    return merge_histogram(new_histogram)
 
-isfile /tmp/dayeleven_count && {
-  rm -rf /tmp/dayeleven_count/*
-  rm -rf /tmp/dayeleven_count
-}
 
-isfile /tmp/dayeleven_count_tmp && {
-  rm -rf /tmp/dayeleven_count_tmp/*
-  rm -rf /tmp/dayeleven_count_tmp
-}
+def read_input(file_name="input"):
+    try:
+        with open(file_name, "r") as file:
+            line = file.readline().strip()
+            return list(map(int, line.split()))
+    except FileNotFoundError:
+        print(f"Error: puzzle '{file_name}' not found! Are you in the right directory?")
+        exit(1)
+    except ValueError:
+        print(f"Error: File '{file_name}' contains invalid data. Ensure it contains space-separated integers.")
+        exit(1)
 
-mkdir /tmp/dayeleven_count
-mkdir /tmp/dayeleven_count_tmp
 
-final_total=0
+if __name__ == "__main__":
+    initial_input = read_input()
 
-thefinal_counter() {
-  semifinal_input=$(cat $targette)
-  semifinal_total=0
-  IFS=$' '
-  for thesemifinal_countdown in $=semifinal_input; do
-    semifinal_total=$((1+semifinal_total))
-  done
-  unset IFS
-  print -n "$semifinal_total" > /tmp/dayeleven_count/$worker_id
-  print '' > /tmp/dayeleven_count_tmp/$worker_id
-}
+    initial_histogram = [(x, 1) for x in initial_input]
 
-worker_id=0
-for do_total_semifinally in /tmp/dayeleven/*; do
-  worker_id=$((worker_id+1))
-  job_count="$(query_jobs)"
-  [ "$job_count" -ge "$j" ] && {
-    until [ "$(query_jobs)" -lt "$j" ]; do
-      sleep 0.5
-    done
-  }
-  targette=$do_total_semifinally worker_id=$worker_id thefinal_counter &
-done
+    pt2_histogram = initial_histogram
+    for _ in range(75):
+        pt2_histogram = apply_rules2(pt2_histogram)
+    pt2_sum = sum(count for _, count in pt2_histogram)
 
-until isfile /tmp/dayeleven_count_tmp/$worker_id; do
-  sleep 1
-done
-wait
+    print("Stone count:", pt2_sum)
 
-IFS=$' '
-for do_total_finally in /tmp/dayeleven_count/*; do
-  le_summes=$(cat $do_total_finally)
-  final_total=$((final_total+le_summes))
-done
-unset IFS
-
-print "$final_total"
