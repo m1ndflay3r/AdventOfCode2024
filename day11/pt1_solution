@@ -6,43 +6,184 @@ libmiscinit
 
 input=$(fox-fr ./input)
 
-polish_stone() {
-  [ "$stone" = 0 ] && \
-    print -n '1 ' && \
-    return 0
-  stoneln=$(getstrln "$stone")
-  isevennum "$stoneln" && {
-    haploid=$((stoneln/2))
-    stoneleft=$((${stone: :$haploid}))
-    stoneright=$((${stone:$haploid}))
-    print -n ""$stoneleft" "$stoneright" "
-    return 0
-  }
-  print -n ""$(($stone*2024))" " && \
-    return 0
+isfile /tmp/dayeleven && {
+  rm -rf /tmp/dayeleven/*
+  rm -rf /tmp/dayeleven
 }
 
-blinks=0
-while true; do
-  blinks=$((blinks+1))
-  placeholder=""
-  IFS=$' '
-  for stone in $=input; do
-    placeholder=""$placeholder""$(polish_stone)""
+isfile /tmp/dayeleven_tmp && {
+  rm -rf /tmp/dayeleven_tmp/*
+  rm -rf /tmp/dayeleven_tmp
+}
+
+mkdir /tmp/dayeleven
+mkdir /tmp/dayeleven_tmp
+
+# j = thread count; using for familiarity
+[ -z "$j" ] && \
+  j=$(($(nproc)+1))
+
+create_worker() {
+  polish_stone() {
+    [ "$stone" = 0 ] && \
+      print -n '1 ' && \
+      return 0
+    stoneln=$(getstrln "$stone")
+    isevennum "$stoneln" && {
+      haploid=$((stoneln/2))
+      stoneleft=$((${stone: :$haploid}))
+      stoneright=$((${stone:$haploid}))
+      print -n ""$stoneleft" "$stoneright" "
+      return 0
+    }
+    print -n ""$(($stone*2024))" " && \
+      return 0
+  }
+
+  blinks=0
+  while true; do
+    blinks=$((blinks+1))
+    placeholder=""
+    IFS=$' '
+    for stone in $=input; do
+      placeholder=""$placeholder""$(polish_stone)""
+    done
+    unset IFS
+    input=$placeholder
+    [ "$blinks" = 5 ] && \
+      break
   done
-  unset IFS
-  input=$placeholder
-  [ "$blinks" = 25 ] && \
+  print -n "$input" > /tmp/dayeleven/$worker_id
+  print '' > /tmp/dayeleven_tmp/$worker_id
+  return 0
+}
+
+print "PASS 1/5"
+worker_input_count=0
+IFS=$' '
+print "Starting workers on "$j" threads"
+for distrib_input in $=input; do
+  worker_input_count=$((worker_input_count+1))
+  job_count=$(query_jobs)
+  [ "$job_count" -ge "$j" ] && {
+    until [ "$(query_jobs)" -lt "$j" ]; do
+      sleep 0.5
+    done
+  }
+  worker_id=$worker_input_count input="$distrib_input" create_worker &
+done
+unset IFS
+print "Waiting for workers to finish"
+
+until isfile /tmp/dayeleven_tmp/$worker_input_count; do
+  sleep 1
+done
+wait
+
+## => 2nd pass
+mo_passes() {
+  print "Combining worker outputs into next input"
+  unset input
+  worker_input_count=0
+  rm -rf /tmp/dayelev/*
+  rm -rf /tmp/dayelev
+  cp -r /tmp/dayeleven /tmp/dayelev
+  rm -rf /tmp/dayeleven/*
+  rm -rf /tmp/dayeleven
+  mkdir /tmp/dayeleven
+  print "Starting workers on "$j" threads"
+  for do_recurse in /tmp/dayelev/*; do
+    input=$(cat $do_recurse)
+    IFS=$' '
+    for distrib_input in $=input; do
+      worker_input_count=$((worker_input_count+1))
+      job_count=$(query_jobs)
+      [ "$job_count" -ge "$j" ] && {
+        until [ "$(query_jobs)" -lt "$j" ]; do
+          sleep 0.5
+        done
+      }
+      worker_id="$worker_input_count" input="$distrib_input" create_worker &
+    done
+    unset IFS
+  done
+  print "Waiting for workers to finish"
+}
+
+do_until_passes=4
+#set current pass to 1 since we already did one earlier
+current_pass=1
+while true; do
+  print "PASS "$((current_pass+1))"/5"
+  mo_passes
+  until isfile /tmp/dayeleven_tmp/$worker_input_count; do
+    sleep 1
+  done
+  wait
+  current_pass=$((current_pass+1))
+  [ "$current_pass" -gt "$do_until_passes" ] && \
     break
 done
 
-stone_count=0
+print "Counting final results"
+
+isfile /tmp/dayeleven_count && {
+  rm -rf /tmp/dayeleven_count/*
+  rm -rf /tmp/dayeleven_count
+}
+
+isfile /tmp/dayeleven_count_tmp && {
+  rm -rf /tmp/dayeleven_count_tmp/*
+  rm -rf /tmp/dayeleven_count_tmp
+}
+
+mkdir /tmp/dayeleven_count
+mkdir /tmp/dayeleven_count_tmp
+
+final_total=0
+
+thefinal_counter() {
+  semifinal_input=$(cat $targette)
+  semifinal_total=0
+  IFS=$' '
+  for thesemifinal_countdown in $=semifinal_input; do
+    semifinal_total=$((1+semifinal_total))
+  done
+  unset IFS
+  print -n "$semifinal_total" > /tmp/dayeleven_count/$worker_id
+  print '' > /tmp/dayeleven_count_tmp/$worker_id
+}
+
+worker_id=0
+for do_total_semifinally in /tmp/dayeleven/*; do
+  worker_id=$((worker_id+1))
+  job_count="$(query_jobs)"
+  [ "$job_count" -ge "$j" ] && {
+    until [ "$(query_jobs)" -lt "$j" ]; do
+      sleep 0.5
+    done
+  }
+  targette=$do_total_semifinally worker_id=$worker_id thefinal_counter &
+done
+
+until isfile /tmp/dayeleven_count_tmp/$worker_id; do
+  sleep 1
+done
+wait
+
 IFS=$' '
-for stones in $=input; do
-  stone_count=$((stone_count+1))
+for do_total_finally in /tmp/dayeleven_count/*; do
+  le_summes=$(cat $do_total_finally)
+  final_total=$((final_total+le_summes))
 done
 unset IFS
 
-print "$input"
-print
-print "Stone count:"$stone_count""
+##print results
+print "$final_total"
+
+#cleanup
+rm -rf /tmp/dayeleven
+rm -rf /tmp/dayelev
+rm -rf /tmp/dayeleven_tmp
+rm -rf /tmp/dayeleven_count
+rm -rf /tmp/dayeleven_count_tmp
