@@ -54,7 +54,7 @@ func main() {
   }
   // Calculate result
   ans := quadCounts[0][0] * quadCounts[0][1] * quadCounts[1][0] * quadCounts[1][1]
-  fmt.Println("PART 1:", ans)
+  fmt.Println("Result:", ans)
 }
 
 // safely convert string to int
