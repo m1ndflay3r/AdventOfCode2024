@@ -1,0 +1,143 @@
+#!/usr/bin/env zsh
+
+## env setup
+fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
+autoload libmiscinit
+libmiscinit
+
+unset output_array
+declare -a output_array
+
+##puzzle input
+reg_a=18427963
+reg_b="0"
+reg_c="0"
+
+opcodes=('2'
+         '1'
+         '7'
+         '0'
+         '4'
+         '1'
+         '5'
+         '3')
+
+operands=('4'
+          '1'
+          '5'
+          '3'
+          '3'
+          '6'
+          '5'
+          '0')
+
+#combo operand handler
+combo_op() {
+  is_reg_a=0
+  is_reg_b=0
+  is_reg_c=0
+  [ "$op" = 4 ] && {
+    op="$reg_a"
+    is_reg_a=1
+  }
+  [ "$op" = 5 ] && \
+  [ "$is_reg_a" = 0 ] && {
+    op="$reg_b"
+    is_reg_b=1
+  }
+  [ "$op" = 6 ] && \
+  [ "$is_reg_a" = 0 ] && \
+  [ "$is_reg_b" = 0 ] && {
+    op="$reg_c"
+    is_reg_c=1
+  }
+  # no idea if this will be relevant, but instructions said combo 7 will never be in a valid program
+  [ "$op" = 7 ] && \
+  [ "$is_reg_a" = 0 ] && \
+  [ "$is_reg_b" = 0 ] && \
+  [ "$is_reg_c" = 0 ] && {
+    print "Error: adv instruction received reserved value of 7"
+    return 1
+  }
+}
+
+adv() {
+  combo_op
+  denom=$((2**$op))
+  reg_a=$((reg_a/denom))
+}
+
+bxl() {
+  reg_b=$((reg_b^op))
+}
+
+bst() {
+  combo_op
+  reg_b=$((op%8))
+}
+
+jnz() {
+  ! [ "$reg_a" = 0 ] && {
+    pointer=$((op/2))
+    no_increase_pointer=1
+  } || \
+  true
+}
+
+bxc() {
+  reg_b=$((reg_b^reg_c))
+}
+
+out() {
+  combo_op
+  [ "$DEBUG" = 1 ] && print "DEBUG: Adding "$((op%8))" to output array"
+  output_array+=("$((op%8))")
+}
+
+bdv() {
+  combo_op
+  denom=$((2**$op))
+  reg_b=$((reg_a/denom))
+}
+
+cdv() {
+  combo_op
+  denom=$((2**$op))
+  reg_c=$((reg_a/denom))
+}
+
+pointer=0
+no_increase_pointer=0
+while true; do
+  #move pointer forward
+  [ $no_increase_pointer = 1 ] && \
+    no_increase_pointer=0 || \
+    pointer=$((pointer+1))
+  #fetch inst and operand for pointer location
+  inst=$opcodes[$pointer]
+  op=$operands[$pointer]
+  #break loop if inst or op is empty (end of program)
+  ([ -z "$inst" ] || [ -z "$op" ]) && \
+    break
+  #execute instruction based on op code received
+  case $inst in
+    (0) adv ;;
+    (1) bxl ;;
+    (2) bst ;;
+    (3) jnz ;;
+    (4) bxc ;;
+    (5) out ;;
+    (6) bdv ;;
+    (7) cdv ;;
+  esac
+done
+
+## output results
+#format output the way puzzle expects
+print ''
+output_string=''
+for output in $=output_array; do
+  output_string=""$output_string""$output","
+done
+#print result
+print ${output_string: :-1}
