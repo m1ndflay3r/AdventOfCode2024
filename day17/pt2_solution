@@ -1,0 +1,134 @@
+#!/usr/bin/env zsh
+
+## env setup
+fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
+autoload libmiscinit
+libmiscinit
+
+expected_output="2,4,1,1,7,5,0,3,4,3,1,6,5,5,3,0"
+
+#pretty much just copy+pasted from pt1, but as a function
+le_programme() {
+  unset output_array
+  declare -a output_array
+
+  reg_b="0"
+  reg_c="0"
+
+  opcodes=('2'
+           '1'
+           '7'
+           '0'
+           '4'
+           '1'
+           '5'
+           '3')
+
+  operands=('4'
+            '1'
+            '5'
+            '3'
+            '3'
+            '6'
+            '5'
+            '0')
+
+  combo_op() {
+    case $op in
+      0|1|2|3) ;;
+      4) op=$reg_a ;;
+      5) op=$reg_b ;;
+      6) op=$reg_c ;;
+      7)
+        print "Error: Instruction received reserved value of 7"
+        return 1 ;;
+    esac
+  }
+
+  adv() {
+    combo_op
+    denom=$((2**$op))
+    reg_a=$((reg_a/denom))
+  }
+
+  bxl() {
+    reg_b=$((reg_b^op))
+  }
+
+  bst() {
+    combo_op
+    reg_b=$((op%8))
+  }
+
+  jnz() {
+    ! [ "$reg_a" = 0 ] && {
+      pointer=$((op/2))
+      pointer=$((pointer+1))
+      no_increase_pointer=1
+    } || \
+    true
+  }
+
+  bxc() {
+    reg_b=$((reg_b^reg_c))
+  }
+
+  out() {
+    combo_op
+    output_array+=("$((op%8))")
+  }
+
+  bdv() {
+    combo_op
+    denom=$((2**$op))
+    reg_b=$((reg_a/denom))
+  }
+
+  cdv() {
+    combo_op
+    denom=$((2**$op))
+    reg_c=$((reg_a/denom))
+  }
+
+  pointer=0
+  no_increase_pointer=0
+  while true; do
+    [ $no_increase_pointer = 1 ] && \
+      no_increase_pointer=0 || \
+      pointer=$((pointer+1))
+    inst=$opcodes[$pointer]
+    op=$operands[$pointer]
+    ([ -z "$inst" ] || [ -z "$op" ]) && \
+      break
+    case $inst in
+      (0) adv ;;
+      (1) bxl ;;
+      (2) bst ;;
+      (3) jnz ;;
+      (4) bxc ;;
+      (5) out ;;
+      (6) bdv ;;
+      (7) cdv ;;
+    esac
+  done
+
+  output_string=''
+  for output in $=output_array; do
+    output_string=""$output_string""$output","
+  done
+  print ${output_string: :-1}
+}
+
+# attempt #1 - brute force method (aka the coders' "spray 'n pray")
+
+brute_counter=0
+while true; do
+  brute_counter=$((brute_counter+1))
+  [ "$DEBUG" = 1 ] && print "DEBUG: trying reg_a value "$brute_counter""
+  output_test=$(reg_a=$brute_counter le_programme)
+  [ "$output_test" = "$expected_output" ] && {
+    print "$brute_counter"
+    return 0
+  }
+  [ "$DEBUG" = 1 ] && print "DEBUG: value not match (expect "$expected_output", got "$output_test""
+done
