@@ -33,32 +33,15 @@ operands=('4'
 
 #combo operand handler
 combo_op() {
-  is_reg_a=0
-  is_reg_b=0
-  is_reg_c=0
-  [ "$op" = 4 ] && {
-    op="$reg_a"
-    is_reg_a=1
-  }
-  [ "$op" = 5 ] && \
-  [ "$is_reg_a" = 0 ] && {
-    op="$reg_b"
-    is_reg_b=1
-  }
-  [ "$op" = 6 ] && \
-  [ "$is_reg_a" = 0 ] && \
-  [ "$is_reg_b" = 0 ] && {
-    op="$reg_c"
-    is_reg_c=1
-  }
-  # no idea if this will be relevant, but instructions said combo 7 will never be in a valid program
-  [ "$op" = 7 ] && \
-  [ "$is_reg_a" = 0 ] && \
-  [ "$is_reg_b" = 0 ] && \
-  [ "$is_reg_c" = 0 ] && {
-    print "Error: adv instruction received reserved value of 7"
-    return 1
-  }
+  case $op in
+    0|1|2|3) ;;
+    4) op=$reg_a ;;
+    5) op=$reg_b ;;
+    6) op=$reg_c ;;
+    7)
+      print "Error: Instruction received reserved value of 7"
+      return 1 ;;
+  esac
 }
 
 adv() {
