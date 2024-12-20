@@ -121,28 +121,14 @@ le_programme() {
 
 ## attempt #1 - brute force method (aka the coders' "spray 'n pray")
 # start at first num that produces 16 num output
-assumption=18427963
-brute_counter_big=34
+brute_counter=35184372088830
 while true; do
-  brute_counter_big=$((brute_counter_big+1))
-
-  brute_counter_small='0000'
-  while true; do
-    [ "$DEBUG" = 1 ] && print "DEBUG: trying reg_a value "$brute_counter_big""$assumption""$brute_counter_small""
-    output_test=$(reg_a=""$brute_counter_big""$assumption""$brute_counter_small"" le_programme)
-
-    [ "$output_test" = "$expected_output" ] && {
-      print ""$brute_counter_big""$assumption""$brute_counter_small""
-      return 0
-    }
-    brute_counter_small=$((brute_counter_small+1))
-    [ "$brute_counter_small" -gt 9999 ] && \
-      break
-    brute_chk_ln=$(getstrln $brute_counter_small)
-    [ "$brute_chk_ln" -lt 4 ] && \
-      until [ $(getstrln $brute_counter_small) = 4 ]; do
-        brute_counter_small="0"$brute_counter_small""
-      done
-    [ "$DEBUG" = 1 ] && print "DEBUG: value not match (expect "$expected_output", got "$output_test")"
-  done
+  brute_counter=$((brute_counter+1))
+  [ "$DEBUG" = 1 ] && print "DEBUG: trying reg_a value "$brute_counter""
+  output_test=$(reg_a=$brute_counter le_programme)
+  [ "$output_test" = "$expected_output" ] && {
+    print "$brute_counter"
+    return 0
+  }
+  [ "$DEBUG" = 1 ] && print "DEBUG: value not match (expect "$expected_output", got "$output_test")"
 done
