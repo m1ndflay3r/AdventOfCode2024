@@ -1,0 +1,41 @@
+#!/usr/bin/env zsh
+
+fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
+autoload libmiscinit
+libmiscinit
+
+#2d_arr is 1-indexed and instructions said coords should be from 0-70 - so we're creating a grid that's 71 x 71 (7x7 for test input)
+blank=1 2d_arr create input 7 7
+
+puzzle_in=$(fox-fr ./input)
+
+unset input_arr
+declare -a input_arr
+
+IFS=$'\n'
+for zin in $=puzzle_in; do
+  input_arr+=("$zin")
+done
+unset IFS
+
+indice=0
+while true; do
+  indice=$((indice+1))
+  working_raw=$input_arr[$indice]
+  [ -z "$working_raw" ] && \
+    break
+  unset working_x
+  unset working_y
+  IFS=$','
+  for din in $=working_raw; do
+    [ -z "$working_x" ] && \
+      working_x=$din || \
+      working_y=$din
+  done
+  #account for indexing
+  working_x=$((working_x+1))
+  working_y=$((working_y+1))
+  unset IFS
+  2d_arr update input 'X' $working_x $working_y
+  2d_arr draw input
+done
