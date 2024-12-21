@@ -1,0 +1,162 @@
+#!/usr/bin/env zsh
+
+## env setup
+fpath=(/usr/lib/zsh_libmisc/libmisc.zwc $fpath)
+autoload libmiscinit
+libmiscinit
+
+zmodload zsh/mathfunc
+
+source ./unmodulus
+
+unset output_array
+declare -a output_array
+
+##puzzle input
+reg_a="0"
+reg_b="0"
+reg_c="0"
+
+opcodes=('3'
+         '5'
+         '1'
+         '4'
+         '0'
+         '7'
+         '1'
+         '2')
+
+# invert input from pt1
+
+operands=('0'
+          '5'
+          '6'
+          '3'
+          '3'
+          '5'
+          '1'
+          '4')
+
+opcount=0
+for county in $=operands; do
+  opcount=$((opcount+1))
+done
+
+trimtoint() {
+  [ "$DEBUG" = 1 ] && print "trimtoint received "$totrim"" > /tmp/trimmy
+  while true; do
+    trimmy_print=${totrim: :1}
+    totrim=${totrim:1}
+    [ "$trimmy_print" = '.' ] && \
+      break
+    print -n $trimmy_print
+    [ "$DEBUG" = 1 ] && print -n $trimmy_print >> /tmp/trimmy
+  done
+  print ''
+ [ "$DEBUG" = 1 ] && print '' >> /tmp/trimmy
+}
+
+#combo operand handler
+combo_op() {
+  case $op in
+    0|1|2|3) ;;
+    4) op=$reg_a ;;
+    5) op=$reg_b ;;
+    6) op=$reg_c ;;
+    7)
+      print "Error: Instruction received reserved value of 7"
+      return 1 ;;
+  esac
+}
+
+adv() {
+  combo_op
+  denom=$((log2($op)))
+  denom=$(totrim=$denom trimtoint)
+  [ "$DEBUG" = 1 ] && cat /tmp/trimmy
+  reg_a=$((reg_a*denom))
+}
+
+bxl() {
+  reg_b=$((op^reg_b))
+}
+
+bst() {
+  combo_op
+  reg_b=$(unmodulus $op)
+}
+
+jnz() {
+  ! [ "$reg_a" = 0 ] && {
+    pointer=$((op/2))
+    pointer=$((pointer+1))
+    pointer=$((opcount-pointer))
+    no_increase_pointer=1
+  } || \
+  true
+}
+
+bxc() {
+  reg_b=$((reg_c^reg_b))
+}
+
+out() {
+  combo_op
+  [ "$DEBUG" = 1 ] && print "DEBUG: Adding "$(unmodulus $op)" to output array"
+  output_array+=("$(unmodulus $op)")
+}
+
+bdv() {
+  combo_op
+  denom=$((log2($op)))
+  denom=$(totrim=$denom trimtoint)
+  [ "$DEBUG" = 1 ] && cat /tmp/trimmy
+  reg_b=$((reg_a*denom))
+}
+
+cdv() {
+  combo_op
+  denom=$((log2($op)))
+  denom=$(totrim=$denom trimtoint)
+  [ "$DEBUG" = 1 ] && cat /tmp/trimmy
+  reg_c=$((reg_a*denom))
+}
+
+pointer=0
+no_increase_pointer=0
+while true; do
+  #move pointer forward
+  [ $no_increase_pointer = 1 ] && \
+    no_increase_pointer=0 || \
+    pointer=$((pointer+1))
+  #fetch inst and operand for pointer location
+  inst=$opcodes[$pointer]
+  op=$operands[$pointer]
+  [ "$DEBUG" = 1 ] && print "DEBUG: pointer location: "$pointer""
+  #break loop if inst or op is empty (end of program)
+  ([ -z "$inst" ] || [ -z "$op" ]) && \
+    break
+  #execute instruction based on op code received
+  case $inst in
+    (0) adv ;;
+    (1) bxl ;;
+    (2) bst ;;
+    (3) jnz ;;
+    (4) bxc ;;
+    (5) out ;;
+    (6) bdv ;;
+    (7) cdv ;;
+  esac
+done
+
+## output results
+#format output the way puzzle expects
+[ "$DEBUG" = 1 ] && print ""
+output_string=''
+for output in $=output_array; do
+  output_string=""$output_string""$output","
+done
+#print result
+print ${output_string: :-1}
+
+print $reg_a
