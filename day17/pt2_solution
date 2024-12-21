@@ -120,10 +120,13 @@ le_programme() {
 }
 
 ## attempt #1 - brute force method (aka the coders' "spray 'n pray")
-# start at first num that produces 16 num output
-brute_counter=35184372088831
+# start at puzzle input, minus trailing 0 (call it a hunch)
+brute_counter=241175034316553
+# add 3% (because it's my favourite number)
+brute_counter=$((brute_counter*1.03))
+# count down, break if value is below that which generates 16 long outputs
 while true; do
-  brute_counter=$((brute_counter+1))
+  brute_counter=$((brute_counter-1))
   [ "$DEBUG" = 1 ] && print "DEBUG: trying reg_a value "$brute_counter""
   output_test=$(reg_a=$brute_counter le_programme)
   [ "$output_test" = "$expected_output" ] && {
@@ -131,4 +134,7 @@ while true; do
     return 0
   }
   [ "$DEBUG" = 1 ] && print "DEBUG: value not match (expect "$expected_output", got "$output_test")"
+  # if we drop below this value, then it's back to the drawing board
+  [ "$brute_counter" -lt 35184372088832 ] && \
+    return 1
 done
